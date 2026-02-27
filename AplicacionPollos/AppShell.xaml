@@ -3,12 +3,20 @@
     x:Class="AplicacionPollos.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:m="clr-namespace:AplicacionPollos.Models"
     xmlns:local="clr-namespace:AplicacionPollos"
+    xmlns:views="clr-namespace:AplicacionPollos.Views"
     Title="AplicacionPollos">
-
+    <!--<Shell.BindingContext>
+        <m:CajasModel></m:CajasModel>
+    </Shell.BindingContext>-->
     <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />
+        ContentTemplate="{DataTemplate views:AgregarCajaView}"
+        Route="Agregar_Caja"
+        ></ShellContent>
+    <ShellContent
+        ContentTemplate="{DataTemplate views:AgregarCategoria}"
+        Route="Agregar_Categoria"
+        ></ShellContent>
 
 </Shell>

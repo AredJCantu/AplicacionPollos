@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="AplicacionPollos.Views.AgregarCajaView"
+             Title="AgregarCajaView">
+    <!--<ContentPage.BindingContext>
+        
+    </ContentPage.BindingContext>-->
+    <VerticalStackLayout>
+        <Border Margin="5" Stroke="Black" StrokeThickness="2" HorizontalOptions="Center">
+            <Label Text="Agregue una caja:"></Label>
+        </Border>
+        <Label Text="Código de barras:"></Label>
+        <Entry Placeholder="00000000000000000000" Keyboard="Numeric"></Entry>
+        <Label Text="Rango de peso:"></Label>
+        <Entry Placeholder="3" Keyboard="Numeric"></Entry>
+        <Label Text="Peso de la caja:"></Label>
+        <Entry Placeholder="00.00"></Entry>
+        <Button Text="Enviar" Command="{Binding}"></Button>
+    </VerticalStackLayout>
+</ContentPage>
