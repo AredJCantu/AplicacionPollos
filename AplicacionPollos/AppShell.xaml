@@ -5,11 +5,16 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:m="clr-namespace:AplicacionPollos.Models"
     xmlns:local="clr-namespace:AplicacionPollos"
+    xmlns:vm="clr-namespace:AplicacionPollos.ViewModels"
     xmlns:views="clr-namespace:AplicacionPollos.Views"
     Title="AplicacionPollos">
-    <!--<Shell.BindingContext>
-        <m:CajasModel></m:CajasModel>
-    </Shell.BindingContext>-->
+    <Shell.BindingContext>
+        <vm:CajasViewModel></vm:CajasViewModel>
+    </Shell.BindingContext>
+    <ShellContent
+    ContentTemplate="{DataTemplate views:InicioView}"
+    Route="Menu_Inicio"
+    ></ShellContent>
     <ShellContent
         ContentTemplate="{DataTemplate views:AgregarCajaView}"
         Route="Agregar_Caja"
