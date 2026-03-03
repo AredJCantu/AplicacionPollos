@@ -24,13 +24,41 @@ namespace AplicacionPollos.ViewModels
         {
             AgregarCommand = new RelayCommand(Agregar);
             EliminarCommand = new RelayCommand(Eliminar);
+            EjemploCommand = new RelayCommand(Ejemplo);
             EditarCommand = new RelayCommand(Editar);
             CambiarVistaCommand = new RelayCommand<Vistas>(CambiarVista);
         }
+
+
+        //25 digitos de QR -----
+        //Categorizacion del rango de peso
+        Dictionary<string, byte> Categorias = new() {
+            { "1254",3 },
+            { "1298",7 },
+            { "1265",8 },
+            { "1256",5 },
+            { "1255",4 }
+        };
+        private void Ejemplo()
+        {
+            var x = CodigoBarras;
+            var peso = x.Substring(12, 4);
+            var lote = x.Substring(2,4);
+            var rangoPeso = Categorias.Where(x=>x.Key==lote).FirstOrDefault();
+            CajaModel = new();
+                CajaModel.numero_lote = int.Parse(lote);
+                CajaModel.peso = decimal.Parse(peso);
+                CajaModel.rango_peso = rangoPeso.Value;
+        }
+
+        public string CodigoBarras { get; set; }
+        public ICommand EjemploCommand { get; set; }
+        //-----------------------
         public CajasModel? CajaModel { get; set; }
         public List<string> ListaErrores { get; set; } = new();
         public Vistas VistaActual { get; set; }
         public ICommand AgregarCommand { get; set; }
+        
         public ICommand EliminarCommand { get; set; }
         public ICommand EditarCommand { get; set; } /* No creo que sea necesario, es imposible que se requiera editar a no ser que exista
                                                     *  error humano al momento de introducir manualmente el código de barras. (Eliminar de ser necesario) */
@@ -78,12 +106,13 @@ namespace AplicacionPollos.ViewModels
             {
                 case Vistas.Principal:
                     VistaActual = Vistas.Principal;
+                    Shell.Current.GoToAsync("//Menu_Inicio");
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(VistaActual)));
                     break;
                 case Vistas.Agregar:
                     VistaActual = Vistas.Agregar;
                     CajaModel = new CajasModel();
-
+                    Shell.Current.GoToAsync("//Agregar_Caja");
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(VistaActual)));
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CajaModel)));
                     break;

@@ -10,12 +10,12 @@
         <VerticalStackLayout>
             <Label HorizontalTextAlignment="Center" Text="Agregue una caja:"></Label>
             <Label Text="Código de barras:"></Label>
-            <Entry Placeholder="00000000000000000000" Keyboard="Numeric"></Entry>
+            <Entry Placeholder="00000000000000000000" Text="{Binding CodigoBarras}" Keyboard="Numeric"></Entry>
             <Label Text="Rango de peso:"></Label>
             <Entry Placeholder="3" Keyboard="Numeric"></Entry>
             <Label Text="Peso de la caja:"></Label>
             <Entry Placeholder="00.00"></Entry>
-            <Button Text="Enviar" Command="{Binding}"></Button>
+            <Button Text="Enviar" Command="{Binding EjemploCommand}"></Button>
         </VerticalStackLayout>
     </Border>
 </ContentPage>

@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="AplicacionPollos.Views.InicioView"
-             Title="Inicio">
+             x:Class="AplicacionPollos.Views.InicioView" Background="#5D5D5D"
+             xmlns:vm="clr-namespace:AplicacionPollos.ViewModels"   >
+    <ContentPage.BindingContext>
+        <vm:CajasViewModel></vm:CajasViewModel>
+    </ContentPage.BindingContext>
     <VerticalStackLayout>
-        <Border Stroke="Black" StrokeThickness="3" BackgroundColor="AliceBlue">
+        <Border Stroke="Black" StrokeThickness="3" BackgroundColor="#736B61">
             <Label Text="Menú de inicio" FontSize="24" HorizontalTextAlignment="Center"></Label>
         </Border>
-        <Button Text="Escanear cajas" FontSize="20" HorizontalOptions="Center"></Button>
-        <Button Text="Agregar nueva categoria" FontSize="20" HorizontalOptions="Center"></Button>
+        <Button Command="{Binding CambiarVistaCommand}" CommandParameter="{StaticResource Vistas.Agregar}" Text="Escanear cajas" FontSize="20" HorizontalOptions="Center"></Button>
     </VerticalStackLayout>
 </ContentPage>
