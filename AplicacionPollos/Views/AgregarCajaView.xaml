@@ -17,7 +17,10 @@
     <VerticalStackLayout>
         <Border Padding="10"  Stroke="Black" StrokeThickness="2">
             <VerticalStackLayout>
-                <Label FontSize="30" FontAttributes="Bold" HorizontalTextAlignment="Center" Text="Agregue una caja"></Label>
+                <Grid ColumnDefinitions="*,*">
+                    <Label Grid.Column="0" FontSize="30" FontAttributes="Bold" HorizontalTextAlignment="Start" Text="Agregue una caja"></Label>
+                    <Label Grid.Column="1" FontSize="30" FontAttributes="Bold" HorizontalTextAlignment="End" Text="{Binding contadorCajas}"></Label>
+                </Grid>
                 <Label Text="Código de barras:"></Label>
                 <Entry Placeholder="00000000000000000000" Text="{Binding CajaModel.codigo_barras}" Keyboard="Numeric"></Entry>
                 <Label Text="Rango de peso:"></Label>

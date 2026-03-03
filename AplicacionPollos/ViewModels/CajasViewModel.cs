@@ -41,7 +41,7 @@ namespace AplicacionPollos.ViewModels
         public List<string> ListaErrores { get; set; } = new();
         public Vistas VistaActual { get; set; }
         public ICommand AgregarCommand { get; set; }
-        
+        public string contadorCajas { get { return "Cajas: "+ListaCajas.Count(); } }
         public ICommand EliminarCommand { get; set; }
         public ICommand EditarCommand { get; set; } /* No creo que sea necesario, es imposible que se requiera editar a no ser que exista
                                                     *  error humano al momento de introducir manualmente el código de barras. (Eliminar de ser necesario) */
