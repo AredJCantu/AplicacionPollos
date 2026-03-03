@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Metadata.Ecma335;
-using System.Text;
-using System.Threading.Tasks;
+﻿using SQLite;
 
 namespace AplicacionPollos.Models
 {
@@ -11,6 +6,8 @@ namespace AplicacionPollos.Models
     {
         //271254486922289100162628A
         public string codigo_barras { get; set; } = string.Empty;
+
+        [PrimaryKey, AutoIncrement]
         public int id { get; set; }
         public int numero_lote { get; set; }
         public byte rango_peso { get; set; }
