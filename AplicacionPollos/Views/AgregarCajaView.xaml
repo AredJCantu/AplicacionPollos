@@ -15,49 +15,58 @@
         
     </ContentPage.BindingContext>-->
     <VerticalStackLayout>
-        <Border Margin="10 10 0 10" Padding="10" Stroke="Black" StrokeThickness="2">
+        <Border Padding="10"  Stroke="Black" StrokeThickness="2">
             <VerticalStackLayout>
-                <Label FontSize="30" Margin="0 0 10 0" FontAttributes="Bold" HorizontalTextAlignment="Center" Text="Agregue una caja"></Label>
+                <Label FontSize="30" FontAttributes="Bold" HorizontalTextAlignment="Center" Text="Agregue una caja"></Label>
                 <Label Text="Código de barras:"></Label>
-                <Entry Placeholder="00000000000000000000" Text="{Binding CodigoBarras}" Keyboard="Numeric"></Entry>
+                <Entry Placeholder="00000000000000000000" Text="{Binding CajaModel.codigo_barras}" Keyboard="Numeric"></Entry>
                 <Label Text="Rango de peso:"></Label>
-                <Entry Placeholder="3" Keyboard="Numeric"></Entry>
+                <Entry Placeholder="3" Keyboard="Numeric" Text="{Binding CajaModel.rango_peso}"></Entry>
                 <Label Text="Peso de la caja:"></Label>
-                <Entry Placeholder="00.00"></Entry>
-                <Button HeightRequest="50" BackgroundColor="#4E4E4E" Text="Agregar" Command="{Binding EjemploCommand}"></Button>
+                <Entry Placeholder="00.00" Text="{Binding CajaModel.peso}"></Entry>
+                <Button HeightRequest="50" BackgroundColor="#4E4E4E" Text="Agregar"></Button>
             </VerticalStackLayout>
         </Border>
-        <CollectionView Margin="10 10 0 10">
-            <CollectionView.Header>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="auto"/>
-                        <ColumnDefinition Width="auto"/>
-                        <ColumnDefinition Width="auto"/>
-                        <ColumnDefinition Width="auto"/>
-                    </Grid.ColumnDefinitions>
-                    <Label Grid.Column="1" Text="ID" FontAttributes="Bold"></Label>
-                    <Label Grid.Column="2" Text="No Lote" FontAttributes="Bold"></Label>
-                    <Label Grid.Column="3" Text="Rango" FontAttributes="Bold"></Label>
-                    <Label Grid.Column="4" Text="Peso" FontAttributes="Bold"></Label>
-                </Grid>
-            </CollectionView.Header>
-            <CollectionView.ItemTemplate>
-                <DataTemplate>
+        <Border Stroke="Black" StrokeThickness="2" Padding="5" Margin="10">
+            <CollectionView SelectionMode="Single" SelectedItem="{Binding CajaModel}" ItemsSource="{Binding ListaCajas}">
+                <CollectionView.Resources>
+                    <Style TargetType="Label">
+                        <Setter Property="HorizontalTextAlignment" Value="Center" />
+                        <!--<Setter Property="Margin" Value="2 0"/>-->
+                        <Setter Property="FontSize" Value="20"/>
+                    </Style>
+                </CollectionView.Resources>
+                <CollectionView.Header>
                     <Grid>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="auto"/>
-                            <ColumnDefinition Width="auto"/>
-                            <ColumnDefinition Width="auto"/>
-                            <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <Label Grid.Column="1" Text="1"/>
-                        <Label Grid.Column="2" Text="2344"/>
-                        <Label Grid.Column="3" Text="3"/>
-                        <Label Grid.Column="4" Text="29.87"/>
+                        <Label Grid.Column="0" Text="ID" FontAttributes="Bold"></Label>
+                        <Label Grid.Column="1" Text="No Lote" FontAttributes="Bold"></Label>
+                        <Label Grid.Column="2" Text="Rango" FontAttributes="Bold"></Label>
+                        <Label Grid.Column="3" Text="Peso" FontAttributes="Bold"></Label>
                     </Grid>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
+                </CollectionView.Header>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Label Grid.Column="0" Text="1"/>
+                            <Label Grid.Column="1" Text="2344"/>
+                            <Label Grid.Column="2" Text="3"/>
+                            <Label Grid.Column="3" Text="29.87"/>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Border>
     </VerticalStackLayout>
 </ContentPage>

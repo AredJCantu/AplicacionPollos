@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
@@ -7,6 +8,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using AplicacionPollos.Models;
 using CommunityToolkit.Mvvm.Input;
+using AplicacionPollos.Repositories;
 
 namespace AplicacionPollos.ViewModels
 {
@@ -24,35 +26,16 @@ namespace AplicacionPollos.ViewModels
         {
             AgregarCommand = new RelayCommand(Agregar);
             EliminarCommand = new RelayCommand(Eliminar);
-            EjemploCommand = new RelayCommand(Ejemplo);
             EditarCommand = new RelayCommand(Editar);
             CambiarVistaCommand = new RelayCommand<Vistas>(CambiarVista);
+            ListaCajas = new() {
+                {new CajasModel { id = 1, peso = 10.5m, numero_lote = 12345 } },
+                { new CajasModel { id = 2, peso = 15.0m, numero_lote = 67890 } },
+                { new CajasModel { id = 3, peso = 8.75m, numero_lote = 54321 } }
+            };
         }
-
-
-        //25 digitos de QR -----
-        //Categorizacion del rango de peso
-        Dictionary<string, byte> Categorias = new() {
-            { "1254",3 },
-            { "1298",7 },
-            { "1265",8 },
-            { "1256",5 },
-            { "1255",4 }
-        };
-        private void Ejemplo()
-        {
-            var x = CodigoBarras;
-            var peso = x.Substring(12, 4);
-            var lote = x.Substring(2,4);
-            var rangoPeso = Categorias.Where(x=>x.Key==lote).FirstOrDefault();
-            CajaModel = new();
-                CajaModel.numero_lote = int.Parse(lote);
-                CajaModel.peso = decimal.Parse(peso);
-                CajaModel.rango_peso = rangoPeso.Value;
-        }
-
-        public string CodigoBarras { get; set; }
-        public ICommand EjemploCommand { get; set; }
+        CajasRepository contexto = new();
+        public ObservableCollection<CajasModel> ListaCajas { get; set; }
         //-----------------------
         public CajasModel? CajaModel { get; set; }
         public List<string> ListaErrores { get; set; } = new();
