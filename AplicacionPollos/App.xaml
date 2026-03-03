@@ -9,6 +9,13 @@
                 <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
                 <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
             </ResourceDictionary.MergedDictionaries>
+            <Style TargetType="ContentPage">
+                <Setter Property="BackgroundColor" Value="red"></Setter>
+            </Style>
+            <Style TargetType="Label">
+                <Setter Property="TextColor" Value="#060606"></Setter>
+            </Style>
+               
         </ResourceDictionary>
     </Application.Resources>
 </Application>

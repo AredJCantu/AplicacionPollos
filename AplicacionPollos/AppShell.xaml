@@ -12,14 +12,16 @@
         <vm:CajasViewModel></vm:CajasViewModel>
     </Shell.BindingContext>
     <ShellContent
+ContentTemplate="{DataTemplate views:AgregarCajaView}"
+Route="Agregar_Caja"
+></ShellContent>
+    
+    <ShellContent
     ContentTemplate="{DataTemplate views:InicioView}"
     Route="Menu_Inicio"
     ></ShellContent>
 
-    <ShellContent
-    ContentTemplate="{DataTemplate views:AgregarCajaView}"
-    Route="Agregar_Caja"
-    ></ShellContent>
+    
 
     <ShellContent
         ContentTemplate="{DataTemplate views:AgregarCategoria}"
