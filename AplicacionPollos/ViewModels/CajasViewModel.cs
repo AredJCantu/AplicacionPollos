@@ -28,9 +28,17 @@ namespace AplicacionPollos.ViewModels
             EliminarCommand = new RelayCommand(Eliminar);
             EditarCommand = new RelayCommand(Editar);
             CambiarVistaCommand = new RelayCommand<Vistas>(CambiarVista);
-            
-        }
 
+            foreach (var caja in ObtenerCajas().Result) 
+            {
+                ListaCajas?.Add(caja);
+            }
+        }
+        
+        public async Task<List<CajasModel>> ObtenerCajas()
+        {
+            return await contexto.ObtenerCajasAsync();
+        }
 
         CajasRepository contexto = new();
         public ObservableCollection<CajasModel> ListaCajas { get; set; }
