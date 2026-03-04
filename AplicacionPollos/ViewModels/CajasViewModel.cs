@@ -28,12 +28,10 @@ namespace AplicacionPollos.ViewModels
             EliminarCommand = new RelayCommand(Eliminar);
             EditarCommand = new RelayCommand(Editar);
             CambiarVistaCommand = new RelayCommand<Vistas>(CambiarVista);
-            ListaCajas = new() {
-                {new CajasModel { id = 1, peso = 10.5m, numero_lote = 12345 } },
-                { new CajasModel { id = 2, peso = 15.0m, numero_lote = 67890 } },
-                { new CajasModel { id = 3, peso = 8.75m, numero_lote = 54321 } }
-            };
+            
         }
+
+
         CajasRepository contexto = new();
         public ObservableCollection<CajasModel> ListaCajas { get; set; }
         //-----------------------
