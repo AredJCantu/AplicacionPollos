@@ -31,7 +31,7 @@ namespace AplicacionPollos.ViewModels
         CajasRepository contexto = new();
         public ObservableCollection<CajasModel> ListaCajas { get; set; }
         //-----------------------
-        public CajasModel? CajaModel { get; set; }
+        public CajasModel? CajaModel { get; set; } = new();
         public List<string> ListaErrores { get; set; } = new();
         public Vistas VistaActual { get; set; }
         public ICommand AgregarCommand { get; set; }
@@ -39,7 +39,7 @@ namespace AplicacionPollos.ViewModels
         public ICommand VerEditarCommand { get; set; }
         public ICommand EditarCommand { get; set; } /* No creo que sea necesario, es imposible que se requiera editar a no ser que exista
                                                     *  error humano al momento de introducir manualmente el código de barras. (Eliminar de ser necesario) */
-        //public string contadorCajas { get { return "Cajas: " + ListaCajas.Count(); } }
+        public string contadorCajas { get { return "Cajas: " + ListaCajas.Count(); } }
         public string rango_Peso { get; set; }
         public string Peso { get; set; }
         public ICommand CambiarVistaCommand { get; set; }
@@ -70,8 +70,13 @@ namespace AplicacionPollos.ViewModels
             if (model!=null)
             {
                 VistaActual = Vistas.Editar;
-                CajaModel = model;
                 CambiarVista(VistaActual);
+                CajaModel = new() {
+                    id=model.id,
+                peso=model.peso,
+                rango_peso=model.rango_peso,
+                numero_lote=model.numero_lote
+                };
                 ListaErrores.Clear();
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
             }
@@ -97,7 +102,6 @@ namespace AplicacionPollos.ViewModels
             ValidarEntrada(CajaModel);
             //TODO: instrucción para agregarlo a la base de datos, recargar datos.
             CajaModel = null; //Para evitar que se haga referencia a ella justo despues de argegar sin que el usuario la haya seleccionado. Otra opcion es quitarla de Agregar e incluirla en CambiarVista.
-            CambiarVista(Vistas.Principal);
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CajaModel)));
         }
 
@@ -123,11 +127,6 @@ namespace AplicacionPollos.ViewModels
         {
             switch (vista)
             {
-                case Vistas.Principal:
-                    VistaActual = Vistas.Principal;
-                    Shell.Current.GoToAsync("//Menu_Inicio");
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(VistaActual)));
-                    break;
                 case Vistas.Agregar:
                     VistaActual = Vistas.Agregar;
                     CajaModel = new CajasModel();
@@ -154,7 +153,7 @@ namespace AplicacionPollos.ViewModels
                         PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(ListaErrores)));
                         return;
                     }
-
+                    
                     //TODO: Crear un clon para editarlo en lugar de editar la caja original.
                     Shell.Current.GoToAsync("//Editar_Caja");
                     VistaActual = Vistas.Editar;
