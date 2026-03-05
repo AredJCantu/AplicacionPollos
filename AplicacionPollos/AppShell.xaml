@@ -20,7 +20,7 @@ Route="Agregar_Caja"
     <ShellContent
         ContentTemplate="{DataTemplate views:EditarView}"
         Route="Editar_Caja"
-    ></ShellContent>
+        ></ShellContent>
 
 
 </Shell>
