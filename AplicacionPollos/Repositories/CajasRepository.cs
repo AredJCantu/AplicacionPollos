@@ -29,14 +29,11 @@ namespace AplicacionPollos.Repositories
         {
             await _initTask;
         }
-
-        //agregar
         public async Task<int> AgregarCajaAsync(CajasModel caja)
         {
             await EnsureInitializedAsync();
             return await _db.InsertAsync(caja);
         }
-
         public async Task<List<CajasModel>> ObtenerCajasAsync()
         {
             await EnsureInitializedAsync();

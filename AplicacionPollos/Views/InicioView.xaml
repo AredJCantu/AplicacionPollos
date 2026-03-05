@@ -17,5 +17,6 @@
                     Text="Escanear cajas" 
                     FontSize="20" 
                     HorizontalOptions="Center"></Button>
+        
     </VerticalStackLayout>
 </ContentPage>
