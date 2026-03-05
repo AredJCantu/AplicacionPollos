@@ -36,6 +36,7 @@ namespace AplicacionPollos.ViewModels
         public Vistas VistaActual { get; set; }
         public ICommand AgregarCommand { get; set; }
         public ICommand EliminarCommand { get; set; }
+        public ICommand VerEditarCommand { get; set; }
         public ICommand EditarCommand { get; set; } /* No creo que sea necesario, es imposible que se requiera editar a no ser que exista
                                                     *  error humano al momento de introducir manualmente el código de barras. (Eliminar de ser necesario) */
         //public string contadorCajas { get { return "Cajas: " + ListaCajas.Count(); } }
@@ -51,10 +52,29 @@ namespace AplicacionPollos.ViewModels
             EliminarCommand = new RelayCommand(Eliminar);
             EditarCommand = new RelayCommand(Editar);
             CambiarVistaCommand = new RelayCommand<Vistas>(CambiarVista);
+            VerEditarCommand = new RelayCommand<CajasModel>(VerEditar);
             //foreach (var caja in ObtenerCajas().Result)
             //{
             //    ListaCajas?.Add(caja);
             //}
+            ListaCajas = new() {
+                { new CajasModel() { id = 1, rango_peso = 3, numero_lote = 1254, peso=23.56m } },
+                { new CajasModel() { id = 2, rango_peso = 4, numero_lote = 1255, peso=26.6m } },
+                { new CajasModel() { id = 3, rango_peso = 5, numero_lote = 1256, peso=20.2m } },
+                { new CajasModel() { id = 4, rango_peso = 6, numero_lote = 1257, peso=27.79m } }
+            };
+        }
+
+        private void VerEditar(CajasModel? model)
+        {
+            if (model!=null)
+            {
+                VistaActual = Vistas.Editar;
+                CajaModel = model;
+                CambiarVista(VistaActual);
+                ListaErrores.Clear();
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
+            }
         }
 
         private void ValidarEntrada(CajasModel? cajaModel)
@@ -90,8 +110,12 @@ namespace AplicacionPollos.ViewModels
 
         public void Editar() 
         {
+            if (CajaModel != null)
+            {
+                ValidarEntrada(CajaModel);
+            }
             //TODO: Instrucción para editarlo en la base de datos (repositorio)
-            CambiarVista(Vistas.Principal);
+            CambiarVista(Vistas.Agregar);
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(VistaActual)));
         }
 
@@ -132,7 +156,7 @@ namespace AplicacionPollos.ViewModels
                     }
 
                     //TODO: Crear un clon para editarlo en lugar de editar la caja original.
-
+                    Shell.Current.GoToAsync("//Editar_Caja");
                     VistaActual = Vistas.Editar;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(VistaActual)));
                     break;
@@ -144,11 +168,9 @@ namespace AplicacionPollos.ViewModels
         }
         public void CalcularCaja(string codigo)
         {
-
                 rango_Peso = categorias[codigo.Substring(2, 4)].ToString();
                 Peso = codigo.Substring(12, 4);
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
-            
         }
     }
 }
