@@ -22,24 +22,12 @@ namespace AplicacionPollos.ViewModels
     }
     public class CajasViewModel : INotifyPropertyChanged
     {
-        public CajasViewModel()
-        {
-            AgregarCommand = new RelayCommand(Agregar);
-            EliminarCommand = new RelayCommand(Eliminar);
-            EditarCommand = new RelayCommand(Editar);
-            CambiarVistaCommand = new RelayCommand<Vistas>(CambiarVista);
-
-            foreach (var caja in ObtenerCajas().Result) 
-            {
-                ListaCajas?.Add(caja);
-            }
-        }
-        
-        public async Task<List<CajasModel>> ObtenerCajas()
-        {
-            return await contexto.ObtenerCajasAsync();
-        }
-
+        Dictionary<string, byte> categorias = new() {
+            { "1254", 3 },
+            { "1255", 4 },
+            { "1256", 5},
+            { "1257", 6}
+        };
         CajasRepository contexto = new();
         public ObservableCollection<CajasModel> ListaCajas { get; set; }
         //-----------------------
@@ -47,14 +35,27 @@ namespace AplicacionPollos.ViewModels
         public List<string> ListaErrores { get; set; } = new();
         public Vistas VistaActual { get; set; }
         public ICommand AgregarCommand { get; set; }
-        public string contadorCajas { get { return "Cajas: "+ListaCajas.Count(); } }
         public ICommand EliminarCommand { get; set; }
         public ICommand EditarCommand { get; set; } /* No creo que sea necesario, es imposible que se requiera editar a no ser que exista
                                                     *  error humano al momento de introducir manualmente el código de barras. (Eliminar de ser necesario) */
+        //public string contadorCajas { get { return "Cajas: " + ListaCajas.Count(); } }
+        public string rango_Peso { get; set; }
+        public string Peso { get; set; }
         public ICommand CambiarVistaCommand { get; set; }
         //TODO: propiedad del repositorio
 
         public event PropertyChangedEventHandler? PropertyChanged;
+        public CajasViewModel()
+        {
+            AgregarCommand = new RelayCommand(Agregar);
+            EliminarCommand = new RelayCommand(Eliminar);
+            EditarCommand = new RelayCommand(Editar);
+            CambiarVistaCommand = new RelayCommand<Vistas>(CambiarVista);
+            //foreach (var caja in ObtenerCajas().Result)
+            //{
+            //    ListaCajas?.Add(caja);
+            //}
+        }
 
         private void ValidarEntrada(CajasModel? cajaModel)
         {
@@ -64,6 +65,11 @@ namespace AplicacionPollos.ViewModels
             if (cajaModel.numero_lote < 0) ListaErrores.Add("El campo 'No. Lote' no fue reconocido, revise el código de barras introducido.");
 
             //TODO: Validar el código de barras, si no será imposible reconocer los datos. (preferiblemente utilizando RegEx)
+        }
+
+        public async Task<List<CajasModel>> ObtenerCajas()
+        {
+            return await contexto.ObtenerCajasAsync();
         }
 
         public void Agregar() 
@@ -135,6 +141,14 @@ namespace AplicacionPollos.ViewModels
 
             ListaErrores.Clear();
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListaErrores)));
+        }
+        public void CalcularCaja(string codigo)
+        {
+
+                rango_Peso = categorias[codigo.Substring(2, 4)].ToString();
+                Peso = codigo.Substring(12, 4);
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
+            
         }
     }
 }

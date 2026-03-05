@@ -2,11 +2,11 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="AplicacionPollos.Views.AgregarCajaView"
-          BackgroundColor="#A0A0A0"
+          BackgroundColor="White"
             >
     <ContentPage.Resources>
         <Style TargetType="Entry">
-            <Setter Property="TextColor" Value="#DDDCDC"></Setter>
+            <Setter Property="TextColor" Value="Black"></Setter>
             <Setter Property="PlaceholderColor" Value="#DDDCDC"></Setter>
             <Setter Property="HeightRequest" Value="45"></Setter>
         </Style>
@@ -18,16 +18,16 @@
         <Border Padding="10"  Stroke="Black" StrokeThickness="2">
             <VerticalStackLayout>
                 <Grid ColumnDefinitions="*,*">
-                    <Label Grid.Column="0" FontSize="30" FontAttributes="Bold" HorizontalTextAlignment="Start" Text="Agregue una caja"></Label>
+                    <Label Grid.Column="0" FontSize="30" FontAttributes="Bold" HorizontalTextAlignment="Start" Text="Agregar"></Label>
                     <Label Grid.Column="1" FontSize="30" FontAttributes="Bold" HorizontalTextAlignment="End" Text="{Binding contadorCajas}"></Label>
                 </Grid>
                 <Label Text="Código de barras:"></Label>
-                <Entry ClearButtonVisibility="WhileEditing" TextChanged="Entry_TextChanged" Placeholder="00000000000000000000" Text="{Binding CajaModel.codigo_barras}" Keyboard="Numeric"></Entry>
+                <Entry ClearButtonVisibility="WhileEditing" x:Name="txtCodigo" Completed="Entry_Completed" Placeholder="00000000000000000000" Text="{Binding CajaModel.codigo_barras}" Keyboard="Text"></Entry>
                 <Label Text="Rango de peso:"></Label>
-                <Entry x:Name="txtRango" Placeholder="3" Keyboard="Numeric" Text="{Binding CajaModel.rango_peso}"></Entry>
+                <Entry ClearButtonVisibility="WhileEditing" x:Name="txtRango" Placeholder="0" Keyboard="Numeric" Text="{Binding CajaModel.rango_peso}"></Entry>
                 <Label Text="Peso de la caja:"></Label>
-                <Entry x:Name="txtPeso" Placeholder="00.00" Text="{Binding CajaModel.peso}"></Entry>
-                <Button HeightRequest="50" BackgroundColor="#4E4E4E" Text="Agregar"></Button>
+                <Entry ClearButtonVisibility="WhileEditing" x:Name="txtPeso" Placeholder="00.00" Text="{Binding CajaModel.peso}"></Entry>
+                <Button HeightRequest="50" BackgroundColor="OrangeRed" Text="Agregar"></Button>
             </VerticalStackLayout>
         </Border>
         <Border Stroke="Black" StrokeThickness="2" Padding="5" Margin="10">
