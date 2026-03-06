@@ -42,6 +42,7 @@ namespace AplicacionPollos.ViewModels
         public string contadorCajas { get { return "Cajas: " + ListaCajas.Count(); } }
         public string rango_Peso { get; set; }
         public string Peso { get; set; }
+        public ICommand VerEscanearQRCommand { get; set; }
         public ICommand CambiarVistaCommand { get; set; }
         //TODO: propiedad del repositorio
 
@@ -53,6 +54,7 @@ namespace AplicacionPollos.ViewModels
             EditarCommand = new RelayCommand(Editar);
             CambiarVistaCommand = new RelayCommand<Vistas>(CambiarVista);
             VerEditarCommand = new RelayCommand<CajasModel>(VerEditar);
+            VerEscanearQRCommand = new RelayCommand(VerEscanearQR);
             //foreach (var caja in ObtenerCajas().Result)
             //{
             //    ListaCajas?.Add(caja);
@@ -171,6 +173,21 @@ namespace AplicacionPollos.ViewModels
                 rango_Peso = categorias[codigo.Substring(2, 4)].ToString();
                 Peso = codigo.Substring(12, 4);
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
+        }
+        //Comandos de dise;o para escanear cajas
+        public void VerEscanearQR()
+        {
+            Shell.Current.GoToAsync("//Escanear_QR");
+            CajaModel = new();
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CajaModel)));
+        }
+        public void EscanearQR(string s)
+        {
+            //cambia la vista sin instanciar un nuevo model
+            CajaModel.codigo_barras= s;
+            Shell.Current.GoToAsync("//Agregar_Caja");
+            VistaActual = Vistas.Agregar;
+            CalcularCaja(CajaModel.codigo_barras);
         }
     }
 }

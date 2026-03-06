@@ -9,7 +9,6 @@ public partial class AgregarCajaView : ContentPage
 		InitializeComponent();
 	}
 	CajasViewModel contexto = new();
-
     private void Entry_Completed(object sender, EventArgs e)
     {
 		var codigo=txtCodigo.Text.Trim();
