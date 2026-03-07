@@ -5,46 +5,54 @@
              x:Name="AgregarVista"
               xmlns:zxing="clr-namespace:ZXing.Net.Maui.Controls;assembly=ZXing.Net.MAUI.Controls"
              xmlns:vm="clr-namespace:AplicacionPollos.ViewModels"
-          BackgroundColor="White" Shell.NavBarIsVisible="False"
+             xmlns:icons="clr-namespace:MahApps.Metro;assembly=MahApps.Metro.IconPacks.FontAwesome6"    
+          BackgroundColor="White" Shell.NavBarIsVisible="False" Title="Escaner"
             >
     <ContentPage.Resources>
         <Style TargetType="Entry">
+            <Setter Property="FontSize" Value="22"></Setter>
             <Setter Property="TextColor" Value="Black"></Setter>
             <Setter Property="PlaceholderColor" Value="#DDDCDC"></Setter>
             <Setter Property="HeightRequest" Value="45"></Setter>
+            <Setter Property="VerticalTextAlignment" Value="Center"></Setter>
+        </Style>
+        <Style TargetType="Label">
+            <Setter Property="FontSize" Value="22"></Setter>
         </Style>
     </ContentPage.Resources>
     <ContentPage.BindingContext>
         <vm:CajasViewModel></vm:CajasViewModel>
     </ContentPage.BindingContext>
     <VerticalStackLayout>
-        <Border Padding="10" Stroke="Black" StrokeThickness="2">
+        <Border Margin="10,0,10,0" Stroke="Black" StrokeThickness="2">
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="20" />
-                    <RowDefinition Height="250" />
+                    <RowDefinition Height="130" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
-                <Label Text="Escaner" FontSize="20" HorizontalTextAlignment="Center" TextColor="Black" FontAttributes="Bold"></Label>
-                <ContentView Grid.Row="1" IsClippedToBounds="True" BackgroundColor="Black">
+                
+                <ContentView HeightRequest="130" Margin="0,20,0,0" Grid.Row="0" IsClippedToBounds="True" BackgroundColor="Black">
                     <zxing:CameraBarcodeReaderView 
             x:Name="barcodeReader" 
             BarcodesDetected="barcodeReader_BarcodesDetected" 
-            HorizontalOptions="Fill"
+            HorizontalOptions="Fill" HeightRequest="130"
             VerticalOptions="Fill" />
                 </ContentView>
-                <VerticalStackLayout Grid.Row="2" BackgroundColor="White" Padding="15,10">
+                <VerticalStackLayout Grid.Row="1" BackgroundColor="White" Padding="15,10">
 
                     <Label Text="Código de barras:" TextColor="Black" />
                     <Entry ClearButtonVisibility="WhileEditing" Unfocused="txtCodigo_Unfocused" x:Name="txtCodigo" Completed="Entry_Completed" Placeholder="00000000000000000000" Text="{Binding CajaModel.codigo_barras}" Keyboard="Text" TextColor="Black" PlaceholderColor="Gray" />
 
-                    <Label Text="Rango de peso:" Margin="0,10,0,0" TextColor="Black" />
-                    <Entry ClearButtonVisibility="WhileEditing" x:Name="txtRango" Placeholder="0" Keyboard="Numeric" Text="{Binding CajaModel.rango_peso}" TextColor="Black" PlaceholderColor="Gray" />
+                    <Grid ColumnDefinitions="auto,*">
+                        <Label Grid.Column="0" Text="Rango de peso:" Margin="0,10,0,0" TextColor="Black" />
+                        <Entry Grid.Column="1" ClearButtonVisibility="WhileEditing" x:Name="txtRango" Placeholder="0" Keyboard="Numeric" Text="{Binding CajaModel.rango_peso}" TextColor="Black" PlaceholderColor="Gray" />
+                    </Grid>
 
-                    <Label Text="Peso de la caja:" Margin="0,10,0,0" TextColor="Black" />
-                    <Entry ClearButtonVisibility="WhileEditing" x:Name="txtPeso" Placeholder="00.00" Text="{Binding CajaModel.peso}" TextColor="Black" PlaceholderColor="Gray" />
-
-                    <Button Margin="0,20,0,0" Command="{Binding AgregarCommand}" HeightRequest="50" BackgroundColor="OrangeRed" TextColor="White" Text="Agregar"></Button>
+                    <Grid ColumnDefinitions="auto,*">
+                        <Label Grid.Column="0" Text="Peso de la caja:" Margin="0,10,0,0" TextColor="Black" />
+                        <Entry Grid.Column="1" ClearButtonVisibility="WhileEditing" x:Name="txtPeso" Placeholder="00.00" Text="{Binding CajaModel.peso}" TextColor="Black" PlaceholderColor="Gray" />
+                    </Grid>
+                    <Button Margin="0,20,0,0" Command="{Binding AgregarCommand}" HeightRequest="50" BackgroundColor="OrangeRed" TextColor="White" Text="Agregar a la lista"></Button>
 
                 </VerticalStackLayout>
             </Grid>
@@ -54,8 +62,8 @@
                 <CollectionView.Resources>
                     <Style TargetType="Label">
                         <Setter Property="HorizontalTextAlignment" Value="Center" />
-                        <!--<Setter Property="Margin" Value="2 0"/>-->
-                        <Setter Property="FontSize" Value="20"/>
+                        <Setter Property="Margin" Value="2, 0"/>
+                        <Setter Property="FontSize" Value="25"/>
                     </Style>
                 </CollectionView.Resources>
                 <CollectionView.Header>
@@ -67,31 +75,50 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <Label Grid.Column="0" Text="ID" FontAttributes="Bold"></Label>
-                        <Label Grid.Column="1" Text="No Lote" FontAttributes="Bold"></Label>
+                        <Label Grid.Column="1" Text="Lote" FontAttributes="Bold"></Label>
                         <Label Grid.Column="2" Text="Rango" FontAttributes="Bold"></Label>
                         <Label Grid.Column="3" Text="Peso" FontAttributes="Bold"></Label>
                     </Grid>
                 </CollectionView.Header>
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
-                        <Grid>
-                            <FlyoutBase.ContextFlyout>
-                                <MenuFlyout>
-                                    <MenuFlyoutItem Text="Editar" Command="{Binding  Source={x:Reference AgregarVista},Path=BindingContext.VerEditarCommand}" CommandParameter="{Binding .}"></MenuFlyoutItem>
-                                    <MenuFlyoutItem Text="Eliminar" CommandParameter="{Binding .}"></MenuFlyoutItem>
-                                </MenuFlyout>
-                            </FlyoutBase.ContextFlyout>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Label Grid.Column="0" Text="{Binding id}"/>
-                            <Label Grid.Column="1" Text="{Binding numero_lote}"/>
-                            <Label Grid.Column="2" Text="{Binding rango_peso}"/>
-                            <Label Grid.Column="3" Text="{Binding peso}"/>
-                        </Grid>
+                        <SwipeView SwipeStarted="SwipeView_SwipeStarted">
+                            <SwipeView.RightItems>
+                                <SwipeItems>
+                                    <SwipeItem 
+                               BackgroundColor="LightBlue"
+                               Command="{Binding Source={x:Reference AgregarVista}, Path=BindingContext.VerEditarCommand}" 
+                               CommandParameter="{Binding .}" >
+                                        <SwipeItem.IconImageSource>
+                                            <FontImageSource FontFamily="Material" Glyph="&#xe150;" Color="White"/>
+                                        </SwipeItem.IconImageSource>
+                                    </SwipeItem>
+
+                                    <SwipeItem
+                               BackgroundColor="LightPink"
+                                
+                               CommandParameter="{Binding .}" >
+                                        <SwipeItem.IconImageSource>
+                                            <FontImageSource FontFamily="Material" Glyph="&#xe872;" Color="White
+                                                             "/>
+                                        </SwipeItem.IconImageSource>
+                                    </SwipeItem>
+                                </SwipeItems>
+                            </SwipeView.RightItems>
+
+                            <Grid BackgroundColor="White">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Label Grid.Column="0" Text="{Binding id}"/>
+                                <Label Grid.Column="1" Text="{Binding numero_lote}"/>
+                                <Label Grid.Column="2" Text="{Binding rango_peso}"/>
+                                <Label Grid.Column="3" Text="{Binding peso}"/>
+                            </Grid>
+                        </SwipeView>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>

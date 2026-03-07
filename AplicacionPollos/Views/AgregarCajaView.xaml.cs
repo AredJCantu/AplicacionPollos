@@ -6,6 +6,7 @@ namespace AplicacionPollos.Views;
 
 public partial class AgregarCajaView : ContentPage
 {
+    private SwipeView _AbiertoActualmente;
     Dictionary<string, byte> categorias = new() {
             { "1254", 3 },
             { "1255", 4 },
@@ -51,7 +52,8 @@ public partial class AgregarCajaView : ContentPage
     public void CalcularCaja(string codigo)
     {
         rango_Peso = categorias[codigo.Substring(2, 4)].ToString();
-        Peso = codigo.Substring(12, 4);
+        string p = codigo.Substring(12, 4);
+        Peso = p.Insert(2,".");
     }
     protected override async void OnAppearing()
     {
@@ -71,5 +73,14 @@ public partial class AgregarCajaView : ContentPage
             await Task.Delay(500);
         });
     }
-
-}
+    //Cerrar el menu swipe cuando otro este avierto
+    private void SwipeView_SwipeStarted(object sender, SwipeStartedEventArgs e)
+    {
+        var swipeViewActual = sender as SwipeView;
+        if (_AbiertoActualmente != null && _AbiertoActualmente != swipeViewActual)
+        {
+            _AbiertoActualmente.Close();
+        }
+        _AbiertoActualmente = swipeViewActual;
+    }
+    }
