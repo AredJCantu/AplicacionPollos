@@ -21,9 +21,5 @@ Route="Agregar_Caja"
         ContentTemplate="{DataTemplate views:EditarView}"
         Route="Editar_Caja"
         ></ShellContent>
-    <ShellContent
-    ContentTemplate="{DataTemplate views:EscanearView}"
-    Route="Escanear_QR"
-    ></ShellContent>
 
 </Shell>

@@ -1,13 +1,28 @@
 using AplicacionPollos.ViewModels;
+using System.ComponentModel;
+using ZXing;
 
 namespace AplicacionPollos.Views;
 
 public partial class AgregarCajaView : ContentPage
 {
-	public AgregarCajaView()
+    Dictionary<string, byte> categorias = new() {
+            { "1254", 3 },
+            { "1255", 4 },
+            { "1256", 5},
+            { "1257", 6}
+        };
+    string rango_Peso = "";
+    string Peso = "";
+    public AgregarCajaView()
 	{
 		InitializeComponent();
-	}
+        barcodeReader.Options = new ZXing.Net.Maui.BarcodeReaderOptions
+        {
+            AutoRotate = true,
+            Multiple = true
+        };
+    }
 	CajasViewModel contexto = new();
     private void Entry_Completed(object sender, EventArgs e)
     {
@@ -15,11 +30,10 @@ public partial class AgregarCajaView : ContentPage
 		if (string.IsNullOrWhiteSpace(codigo))
 			return;
 		// traer el rango de peso y peso del vm
-		contexto.CalcularCaja(codigo);
-		txtRango.Text = contexto.rango_Peso;
-		txtPeso.Text = contexto.Peso;
+		CalcularCaja(codigo);
+		txtRango.Text = rango_Peso;
+		txtPeso.Text = Peso;
     }
-
     private void txtCodigo_Unfocused(object sender, FocusEventArgs e)
     {
         if (txtCodigo.Text != null)
@@ -29,10 +43,15 @@ public partial class AgregarCajaView : ContentPage
             if (string.IsNullOrWhiteSpace(codigo) && codigo.Length <= 24)
                 return;
             // traer el rango de peso y peso del vm
-            contexto.CalcularCaja(codigo);
-            txtRango.Text = contexto.rango_Peso;
-            txtPeso.Text = contexto.Peso;
+            CalcularCaja(codigo);
+            txtRango.Text = rango_Peso;
+            txtPeso.Text = Peso;
         }
+    }
+    public void CalcularCaja(string codigo)
+    {
+        rango_Peso = categorias[codigo.Substring(2, 4)].ToString();
+        Peso = codigo.Substring(12, 4);
     }
     protected override async void OnAppearing()
     {
@@ -40,4 +59,17 @@ public partial class AgregarCajaView : ContentPage
         await Task.Delay(100);
         txtCodigo.Focus();
     }
+
+    private void barcodeReader_BarcodesDetected(object sender, ZXing.Net.Maui.BarcodeDetectionEventArgs e)
+    {
+        var first = e.Results.FirstOrDefault();
+        if (first is null)
+            return;
+        Dispatcher.DispatchAsync(async () =>
+        {
+            txtCodigo.Text = first.Value;
+            await Task.Delay(500);
+        });
+    }
+
 }
