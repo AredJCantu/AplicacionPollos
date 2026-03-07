@@ -32,11 +32,12 @@
                 </Grid.RowDefinitions>
                 
                 <ContentView HeightRequest="130" Margin="0,20,0,0" Grid.Row="0" IsClippedToBounds="True" BackgroundColor="Black">
-                    <zxing:CameraBarcodeReaderView 
-            x:Name="barcodeReader" 
-            BarcodesDetected="barcodeReader_BarcodesDetected" 
-            HorizontalOptions="Fill" HeightRequest="130"
-            VerticalOptions="Fill" />
+                    <zxing:CameraBarcodeReaderView
+                        x:Name="barcodeReader"
+                        BarcodesDetected="barcodeReader_BarcodesDetected"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="Fill"
+                        HeightRequest="130" />
                 </ContentView>
                 <VerticalStackLayout Grid.Row="1" BackgroundColor="White" Padding="15,10">
 
