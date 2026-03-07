@@ -12,6 +12,11 @@ using AplicacionPollos.Repositories;
 
 namespace AplicacionPollos.ViewModels
 {
+    public enum Estandares 
+    {
+        Empiezan_Por_2,
+        Ninguno //Error
+    }
     public enum Vistas //Si quieren usar un string, diganme y lo cambio a un string.
     {
         Agregar,
@@ -23,41 +28,28 @@ namespace AplicacionPollos.ViewModels
     public class CajasViewModel : INotifyPropertyChanged
     {
         CajasRepository contexto = new();
-        public ObservableCollection<CajasModel> ListaCajas { get; set; }
-        //-----------------------
+        public ObservableCollection<CajasModel> ListaCajas { get; set; } = new();
         public CajasModel? CajaModel { get; set; } = new();
         public List<string> ListaErrores { get; set; } = new();
         public Vistas VistaActual { get; set; }
         public ICommand AgregarCommand { get; set; }
         public ICommand EliminarCommand { get; set; }
         public ICommand VerEditarCommand { get; set; }
-        public ICommand EditarCommand { get; set; } /* No creo que sea necesario, es imposible que se requiera editar a no ser que exista
-                                                    *  error humano al momento de introducir manualmente el código de barras. (Eliminar de ser necesario) */
+        public ICommand EditarCommand { get; set; } 
         public string contadorCajas { get { return "Cajas: " + ListaCajas.Count(); } }
         public ICommand CambiarVistaCommand { get; set; }
-        //TODO: propiedad del repositorio
 
         public event PropertyChangedEventHandler? PropertyChanged;
         public CajasViewModel()
         {
-            AgregarCommand = new RelayCommand(Agregar);
+            AgregarCommand = new RelayCommand<string>(Agregar);
             EliminarCommand = new RelayCommand(Eliminar);
             EditarCommand = new RelayCommand(Editar);
             CambiarVistaCommand = new RelayCommand<Vistas>(CambiarVista);
             VerEditarCommand = new RelayCommand<CajasModel>(VerEditar);
-            //foreach (var caja in ObtenerCajas().Result)
-            //{
-            //    ListaCajas?.Add(caja);
-            //}
-            ListaCajas = new() {
-                { new CajasModel() { id = 1, rango_peso = 3, numero_lote = 1254, peso=23.56m } },
-                { new CajasModel() { id = 2, rango_peso = 4, numero_lote = 1255, peso=26.6m } },
-                { new CajasModel() { id = 3, rango_peso = 5, numero_lote = 1256, peso=20.2m } },
-                { new CajasModel() { id = 4, rango_peso = 6, numero_lote = 1257, peso=27.79m } }
-            };
         }
 
-        private void VerEditar(CajasModel? model)
+        private void VerEditar(CajasModel? model) //TODO: Evaluar si se necesita.
         {
             if (model!=null)
             {
@@ -74,46 +66,60 @@ namespace AplicacionPollos.ViewModels
             }
         }
 
-        private void ValidarEntrada(CajasModel? cajaModel)
+        private Estandares ValidarCodigoBarras(string codigo_barras)
         {
-            if (cajaModel == null) return;
+            //TODO: Agregar los demás estándares
+            if (string.IsNullOrWhiteSpace(codigo_barras)) return Estandares.Ninguno;
 
-            if (cajaModel.peso < 0) ListaErrores.Add("El campo 'Peso neto' no puede ser menor o igual que 0. Revise la etiqueta.");
-            if (cajaModel.numero_lote < 0) ListaErrores.Add("El campo 'No. Lote' no fue reconocido, revise el código de barras introducido.");
-
-            //TODO: Validar el código de barras, si no será imposible reconocer los datos. (preferiblemente utilizando RegEx)
+            if (codigo_barras.StartsWith('2') && codigo_barras.Length == 25) 
+            {
+                return Estandares.Empiezan_Por_2;
+            }
+            return Estandares.Ninguno;
         }
 
-        public async Task<List<CajasModel>> ObtenerCajas()
+        private async Task<List<CajasModel>> ObtenerCajas() // TODO: Evaluar si se necesita o no
         {
             return await contexto.ObtenerCajasAsync();
         }
 
-        public async void Agregar()
+        public async void Agregar(string codigo_barras)
         {
-            ValidarEntrada(CajaModel);
-            //TODO: instrucción para agregarlo a la base de datos, recargar datos.
-            await contexto.AgregarCajaAsync(CajaModel);
-            CajaModel = null; //Para evitar que se haga referencia a ella justo despues de argegar sin que el usuario la haya seleccionado. Otra opcion es quitarla de Agregar e incluirla en CambiarVista.
+            CajaModel = new();
+            int temp_id = ListaCajas.LastOrDefault() == null ? 1 : ListaCajas.LastOrDefault().temp_id + 1;
+            CajaModel.temp_id = temp_id;
+            CajaModel.codigo_barras = codigo_barras;
+            if (ListaCajas.Any(x => x.codigo_barras == codigo_barras)) return;
+            switch (ValidarCodigoBarras(codigo_barras))
+            {
+                case Estandares.Empiezan_Por_2:
+                    CajaModel.GTIN = codigo_barras.Substring(2, 4);
+                    CajaModel.numero_lote = int.Parse(codigo_barras.Substring(6, 4));
+                    CajaModel.numero_piezas = int.Parse(codigo_barras.Substring(11, 2));
+                    CajaModel.peso = decimal.Parse(codigo_barras.Substring(12, 5)) / 100m; break;
+            }
+            ListaCajas.Add(CajaModel);
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CajaModel)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListaCajas)));
         }
 
         public void Eliminar()
         {
-            //TODO: Instrucción para eliminarla de la base de datos (repositorio)
-            CambiarVista(Vistas.Principal);
+            ListaCajas.Remove(CajaModel);
+            CambiarVista(Vistas.Agregar);
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(VistaActual)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListaCajas)));
         }
 
         public void Editar()
         {
-            if (CajaModel != null)
-            {
-                ValidarEntrada(CajaModel);
-            }
-            //TODO: Instrucción para editarlo en la base de datos (repositorio)
+            if (CajaModel == null) return;
+            int indice = ListaCajas.IndexOf(CajaModel);
+            if (ListaCajas.Any(x => x.codigo_barras == CajaModel.codigo_barras) && ListaCajas[indice].temp_id != CajaModel.temp_id) return;
+            ListaCajas[indice] = CajaModel;
             CambiarVista(Vistas.Agregar);
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(VistaActual)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListaCajas)));
         }
 
         private void CambiarVista(Vistas vista)
@@ -122,7 +128,6 @@ namespace AplicacionPollos.ViewModels
             {
                 case Vistas.Agregar:
                     VistaActual = Vistas.Agregar;
-                    CajaModel = new CajasModel();
                     Shell.Current.GoToAsync("//Agregar_Caja");
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(VistaActual)));
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CajaModel)));
@@ -130,9 +135,8 @@ namespace AplicacionPollos.ViewModels
                 case Vistas.Eliminar:
                     if (CajaModel == null)
                     {
-                        ListaErrores.Add("Seleccione una caja para eliminar."); /* Podemos también ignorar esta validación y simplemente no hacer nada cuando no haya nada seleccionado. 
-                                                                                 * Pero nos arriesgamos a que un usuario piense que el programa no funciona al intentar eliminar una entrada nula. */
-                        PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(ListaErrores)));
+                        ListaErrores.Add("Seleccione una caja para eliminar.");
+                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListaErrores)));
                         return;
                     }
 
@@ -143,11 +147,20 @@ namespace AplicacionPollos.ViewModels
                     if (CajaModel == null)
                     {
                         ListaErrores.Add("Seleccione una caja para modificar la información.");
-                        PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(ListaErrores)));
+                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListaErrores)));
                         return;
                     }
-                    
-                    //TODO: Crear un clon para editarlo en lugar de editar la caja original.
+
+                    CajasModel clon = new()
+                    {
+                        id = CajaModel.id,
+                        GTIN = CajaModel.GTIN,
+                        peso = CajaModel.peso,
+                        numero_lote = CajaModel.numero_lote,
+                        numero_piezas = CajaModel.numero_piezas,
+                        codigo_barras = CajaModel.codigo_barras
+                    };
+                    CajaModel = clon;
                     Shell.Current.GoToAsync("//Editar_Caja");
                     VistaActual = Vistas.Editar;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(VistaActual)));
