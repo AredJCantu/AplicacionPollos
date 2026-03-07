@@ -28,10 +28,10 @@
                 <Label Text="Escaner" FontSize="20" HorizontalTextAlignment="Center" TextColor="Black" FontAttributes="Bold"></Label>
                 <ContentView Grid.Row="1" IsClippedToBounds="True" BackgroundColor="Black">
                     <zxing:CameraBarcodeReaderView 
-            x:Name="barcodeReader" 
-            BarcodesDetected="barcodeReader_BarcodesDetected" 
-            HorizontalOptions="Fill"
-            VerticalOptions="Fill" />
+                        x:Name="barcodeReader" 
+                        BarcodesDetected="barcodeReader_BarcodesDetected" 
+                        HorizontalOptions="Fill"
+                        VerticalOptions="Fill" />
                 </ContentView>
                 <VerticalStackLayout Grid.Row="2" BackgroundColor="White" Padding="15,10">
 
