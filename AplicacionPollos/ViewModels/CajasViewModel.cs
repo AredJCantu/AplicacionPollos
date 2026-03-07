@@ -15,6 +15,7 @@ namespace AplicacionPollos.ViewModels
     public enum Estandares 
     {
         Empiezan_Por_2,
+        Pilgrim,
         Ninguno //Error
     }
     public enum Vistas //Si quieren usar un string, diganme y lo cambio a un string.
@@ -75,6 +76,10 @@ namespace AplicacionPollos.ViewModels
             {
                 return Estandares.Empiezan_Por_2;
             }
+            if (codigo_barras.Length > 30 && codigo_barras.StartsWith('0')) 
+            {
+                return Estandares.Pilgrim;
+            }
             return Estandares.Ninguno;
         }
 
@@ -97,6 +102,11 @@ namespace AplicacionPollos.ViewModels
                     CajaModel.numero_lote = int.Parse(codigo_barras.Substring(6, 4));
                     CajaModel.numero_piezas = int.Parse(codigo_barras.Substring(11, 2));
                     CajaModel.peso = decimal.Parse(codigo_barras.Substring(12, 5)) / 100m; break;
+                case Estandares.Pilgrim: //TODO: Identificar donde viene el número de piezas, o si es un producto estandarizado y no tiene variación en la cantidad de piezas.
+                    CajaModel.GTIN = codigo_barras.Substring(0, 9);
+                    CajaModel.numero_lote = int.Parse(codigo_barras.Substring(23, 10));
+                    CajaModel.peso = decimal.Parse(codigo_barras.Substring(11, 5)) / 100m; break;
+                default: ListaErrores.Add("ERROR BCR_01: Código de barras no identificado."); break;
             }
             ListaCajas.Add(CajaModel);
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CajaModel)));
