@@ -28,6 +28,12 @@ namespace AplicacionPollos.ViewModels
     }
     public class CajasViewModel : INotifyPropertyChanged
     {
+        Dictionary<string, byte> categorias = new() {
+            { "1254", 3 },
+            { "1255", 4 },
+            { "1256", 5},
+            { "1257", 6}
+        };
         CajasRepository contexto = new();
         public ObservableCollection<CajasModel> ListaCajas { get; set; } = new();
         public CajasModel? CajaModel { get; set; } = new();
@@ -101,7 +107,8 @@ namespace AplicacionPollos.ViewModels
                     CajaModel.GTIN = codigo_barras.Substring(2, 4);
                     CajaModel.numero_lote = int.Parse(codigo_barras.Substring(6, 4));
                     CajaModel.numero_piezas = int.Parse(codigo_barras.Substring(11, 2));
-                    CajaModel.peso = decimal.Parse(codigo_barras.Substring(12, 5)) / 100m; break;
+                    CajaModel.peso = decimal.Parse(codigo_barras.Substring(12, 5)) / 1000m;
+                    CajaModel.rango_peso= categorias[codigo_barras.Substring(2, 4)]; break;
                 case Estandares.Pilgrim: //TODO: Identificar donde viene el número de piezas, o si es un producto estandarizado y no tiene variación en la cantidad de piezas.
                     CajaModel.GTIN = codigo_barras.Substring(0, 9);
                     CajaModel.numero_lote = int.Parse(codigo_barras.Substring(23, 10));
@@ -109,8 +116,9 @@ namespace AplicacionPollos.ViewModels
                 default: ListaErrores.Add("ERROR BCR_01: Código de barras no identificado."); break;
             }
             ListaCajas.Add(CajaModel);
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CajaModel)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListaCajas)));
+            CajaModel = null;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CajaModel)));
         }
 
         public void Eliminar()
