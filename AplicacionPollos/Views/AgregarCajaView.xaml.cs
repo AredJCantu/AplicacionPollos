@@ -15,6 +15,7 @@ public partial class AgregarCajaView : ContentPage
         };
     string rango_Peso = "";
     string Peso = "";
+    CajasViewModel contexto = new();
     public AgregarCajaView()
 	{
 		InitializeComponent();
@@ -24,7 +25,7 @@ public partial class AgregarCajaView : ContentPage
             Multiple = true
         };
     }
-	CajasViewModel contexto = new();
+	
     private void Entry_Completed(object sender, EventArgs e)
     {
 		var codigo=txtCodigo.Text.Trim();

@@ -4,8 +4,7 @@
              x:Class="AplicacionPollos.Views.AgregarCajaView"
              x:Name="AgregarVista"
               xmlns:zxing="clr-namespace:ZXing.Net.Maui.Controls;assembly=ZXing.Net.MAUI.Controls"
-             xmlns:vm="clr-namespace:AplicacionPollos.ViewModels"
-             xmlns:icons="clr-namespace:MahApps.Metro;assembly=MahApps.Metro.IconPacks.FontAwesome6"    
+             xmlns:vm="clr-namespace:AplicacionPollos.ViewModels" 
           BackgroundColor="White" Shell.NavBarIsVisible="False" Title="Escaner"
             >
     <ContentPage.Resources>
@@ -41,16 +40,16 @@
                 <VerticalStackLayout Grid.Row="1" BackgroundColor="White" Padding="15,10">
 
                     <Label Text="Código de barras:" TextColor="Black" />
-                    <Entry ClearButtonVisibility="WhileEditing" Unfocused="txtCodigo_Unfocused" x:Name="txtCodigo" Completed="Entry_Completed" Placeholder="00000000000000000000" Text="{Binding CajaModel.codigo_barras}" Keyboard="Text" TextColor="Black" PlaceholderColor="Gray" />
+                    <Entry TextChanged="" ClearButtonVisibility="WhileEditing" Unfocused="txtCodigo_Unfocused" x:Name="txtCodigo" Completed="Entry_Completed" Placeholder="00000000000000000000" Text="{Binding CajaModel.codigo_barras}" Keyboard="Text" TextColor="Black" PlaceholderColor="Gray" />
 
                     <Grid ColumnDefinitions="auto,*">
                         <Label Grid.Column="0" Text="Rango de peso:" Margin="0,10,0,0" TextColor="Black" />
-                        <Entry Grid.Column="1" ClearButtonVisibility="WhileEditing" x:Name="txtRango" Placeholder="0" Keyboard="Numeric" Text="{Binding CajaModel.rango_peso}" TextColor="Black" PlaceholderColor="Gray" />
+                        <Entry IsEnabled="False" Grid.Column="1" ClearButtonVisibility="WhileEditing" x:Name="txtRango" Placeholder="0" Keyboard="Numeric" Text="{Binding CajaModel.rango_peso}" TextColor="Black" PlaceholderColor="Gray" />
                     </Grid>
 
                     <Grid ColumnDefinitions="auto,*">
                         <Label Grid.Column="0" Text="Peso de la caja:" Margin="0,10,0,0" TextColor="Black" />
-                        <Entry Grid.Column="1" ClearButtonVisibility="WhileEditing" x:Name="txtPeso" Placeholder="00.00" Text="{Binding CajaModel.peso}" TextColor="Black" PlaceholderColor="Gray" />
+                        <Entry IsEnabled="False" Grid.Column="1" ClearButtonVisibility="WhileEditing" x:Name="txtPeso" Placeholder="00.00" Text="{Binding CajaModel.peso}" TextColor="Black" PlaceholderColor="Gray" />
                     </Grid>
                     <Button Margin="0,20,0,0" Command="{Binding AgregarCommand}" CommandParameter="{Binding Source={x:Reference txtCodigo},Path=Text}" HeightRequest="50" BackgroundColor="OrangeRed" TextColor="White" Text="Agregar a la lista"></Button>
 
