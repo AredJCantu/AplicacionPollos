@@ -72,9 +72,6 @@
 	  <MauiXaml Update="Views\AgregarCajaView.xaml">
 		<Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
-	  <MauiXaml Update="Views\EditarView.xaml">
-		<Generator>MSBuild:Compile</Generator>
-	  </MauiXaml>
 	</ItemGroup>
 
 </Project>

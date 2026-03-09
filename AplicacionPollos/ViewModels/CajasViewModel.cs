@@ -117,7 +117,6 @@ namespace AplicacionPollos.ViewModels
             }
             ListaCajas.Add(CajaModel);
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListaCajas)));
-            CajaModel = null;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CajaModel)));
         }
 

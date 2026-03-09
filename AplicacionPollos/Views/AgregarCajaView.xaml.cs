@@ -28,14 +28,27 @@ public partial class AgregarCajaView : ContentPage
 	
     private void Entry_Completed(object sender, EventArgs e)
     {
-		var codigo=txtCodigo.Text.Trim();
-		if (string.IsNullOrWhiteSpace(codigo))
-			return;
-		// traer el rango de peso y peso del vm
-		CalcularCaja(codigo);
-		txtRango.Text = rango_Peso;
-		txtPeso.Text = Peso;
+        ActualizarTextBox();
     }
+    private void OnTextChanged(object sender, TextChangedEventArgs e)
+    {
+        ActualizarTextBox();
+    }
+
+    private void ActualizarTextBox()
+    {
+        if(txtCodigo is not null && txtCodigo.Text is not null)
+        {
+            var codigo = txtCodigo.Text.Trim();
+            if (string.IsNullOrWhiteSpace(codigo))
+                return;
+            // traer el rango de peso y peso del vm
+            CalcularCaja(codigo);
+            txtRango.Text = rango_Peso;
+            txtPeso.Text = Peso;
+        }
+    }
+
     private void txtCodigo_Unfocused(object sender, FocusEventArgs e)
     {
         if (txtCodigo.Text != null)
@@ -68,11 +81,14 @@ public partial class AgregarCajaView : ContentPage
         var first = e.Results.FirstOrDefault();
         if (first is null)
             return;
-        Dispatcher.DispatchAsync(async () =>
+        barcodeReader.IsDetecting = false;
+        Dispatcher.Dispatch(() =>
         {
+            txtCodigo.Text = string.Empty;
             txtCodigo.Text = first.Value;
-            await Task.Delay(500);
+            barcodeReader.IsDetecting = true;
         });
+        ActualizarTextBox();
     }
     //Cerrar el menu swipe cuando otro este avierto
     private void SwipeView_SwipeStarted(object sender, SwipeStartedEventArgs e)
@@ -84,4 +100,5 @@ public partial class AgregarCajaView : ContentPage
         }
         _AbiertoActualmente = swipeViewActual;
     }
-    }
+
+}
