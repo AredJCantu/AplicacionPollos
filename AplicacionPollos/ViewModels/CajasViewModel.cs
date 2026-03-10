@@ -1,4 +1,8 @@
-﻿using System;
+﻿using AplicacionPollos.Models;
+using AplicacionPollos.Repositories;
+using CommunityToolkit.Mvvm.Input;
+using Plugin.Maui.Audio;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -6,9 +10,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using AplicacionPollos.Models;
-using CommunityToolkit.Mvvm.Input;
-using AplicacionPollos.Repositories;
 
 namespace AplicacionPollos.ViewModels
 {
@@ -60,16 +61,9 @@ namespace AplicacionPollos.ViewModels
         {
             if (model!=null)
             {
-                VistaActual = Vistas.Editar;
-                CambiarVista(VistaActual);
-                CajaModel = new() {
-                    id=model.id,
-                peso=model.peso,
-                rango_peso=model.rango_peso,
-                numero_lote=model.numero_lote
-                };
+                CajaModel = model;
                 ListaErrores.Clear();
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CajaModel)));
             }
         }
 
@@ -96,28 +90,44 @@ namespace AplicacionPollos.ViewModels
 
         public async void Agregar(string codigo_barras)
         {
-            CajaModel = new();
-            int temp_id = ListaCajas.LastOrDefault() == null ? 1 : ListaCajas.LastOrDefault().temp_id + 1;
-            CajaModel.temp_id = temp_id;
-            CajaModel.codigo_barras = codigo_barras;
             if (ListaCajas.Any(x => x.codigo_barras == codigo_barras)) return;
+            CajasModel cajaParaLista = new();
+            int temp_id = ListaCajas.LastOrDefault() == null ? 1 : ListaCajas.LastOrDefault().temp_id + 1;
+            cajaParaLista.temp_id = temp_id;
+            cajaParaLista.codigo_barras = codigo_barras;
             switch (ValidarCodigoBarras(codigo_barras))
             {
                 case Estandares.Empiezan_Por_2:
-                    CajaModel.GTIN = codigo_barras.Substring(2, 4);
-                    CajaModel.numero_lote = int.Parse(codigo_barras.Substring(6, 4));
-                    CajaModel.numero_piezas = int.Parse(codigo_barras.Substring(11, 2));
-                    CajaModel.peso = decimal.Parse(codigo_barras.Substring(12, 5)) / 1000m;
-                    CajaModel.rango_peso= categorias[codigo_barras.Substring(2, 4)]; break;
+                    cajaParaLista.GTIN = codigo_barras.Substring(2, 4);
+                    cajaParaLista.numero_lote = int.Parse(codigo_barras.Substring(6, 4));
+                    cajaParaLista.numero_piezas = int.Parse(codigo_barras.Substring(11, 2));
+                    cajaParaLista.peso = decimal.Parse(codigo_barras.Substring(12, 5)) / 1000m;
+                    cajaParaLista.rango_peso= categorias[codigo_barras.Substring(2, 4)]; break;
                 case Estandares.Pilgrim: //TODO: Identificar donde viene el número de piezas, o si es un producto estandarizado y no tiene variación en la cantidad de piezas.
-                    CajaModel.GTIN = codigo_barras.Substring(0, 9);
-                    CajaModel.numero_lote = int.Parse(codigo_barras.Substring(23, 10));
-                    CajaModel.peso = decimal.Parse(codigo_barras.Substring(11, 5)) / 100m; break;
+                    cajaParaLista.GTIN = codigo_barras.Substring(0, 9);
+                    cajaParaLista.numero_lote = int.Parse(codigo_barras.Substring(23, 10));
+                    cajaParaLista.peso = decimal.Parse(codigo_barras.Substring(11, 5)) / 100m; break;
                 default: ListaErrores.Add("ERROR BCR_01: Código de barras no identificado."); break;
             }
-            ListaCajas.Add(CajaModel);
+            ListaCajas.Add(cajaParaLista);
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListaCajas)));
+            //Reproduccion de sonido beep
+            var stream = await FileSystem.OpenAppPackageFileAsync("beep.mp3");
+            var reproductor = AudioManager.Current.CreatePlayer(stream);
+            reproductor.Play();
+
+
+            CajaModel = new() {
+                temp_id = cajaParaLista.temp_id,
+                codigo_barras = cajaParaLista.codigo_barras,
+                GTIN = cajaParaLista.GTIN,
+                numero_lote = cajaParaLista.numero_lote,
+                peso = cajaParaLista.peso,
+                numero_piezas = cajaParaLista.numero_piezas,
+                rango_peso = cajaParaLista.rango_peso
+            };
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CajaModel)));
+
         }
 
         public void Eliminar()
