@@ -17,9 +17,5 @@
 ContentTemplate="{DataTemplate views:AgregarCajaView}"
 Route="Agregar_Caja"
     ></ShellContent>
-    <ShellContent
-        ContentTemplate="{DataTemplate views:EditarView}"
-        Route="Editar_Caja"
-        ></ShellContent>
 
 </Shell>

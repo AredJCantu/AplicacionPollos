@@ -1,4 +1,6 @@
+using AplicacionPollos.Models;
 using AplicacionPollos.ViewModels;
+using Microsoft.Maui.Controls;
 using System.ComponentModel;
 using ZXing;
 
@@ -7,6 +9,7 @@ namespace AplicacionPollos.Views;
 public partial class AgregarCajaView : ContentPage
 {
     private SwipeView _AbiertoActualmente;
+    private bool _procesandoEscaneo = false;
     CajasViewModel contexto; 
     public AgregarCajaView()
 	{
@@ -20,17 +23,6 @@ public partial class AgregarCajaView : ContentPage
     }
 	
 
-    private void ActualizarTextBox()
-    {
-
-            var codigo = txtCodigo.Text.Trim();
-            if (string.IsNullOrWhiteSpace(codigo))
-                return;
-            // traer el rango de peso y peso del vm
-            contexto.Agregar(codigo);
-       
-    }
-
     protected override async void OnAppearing()
     {
         base.OnAppearing();
@@ -41,18 +33,31 @@ public partial class AgregarCajaView : ContentPage
 
     private void barcodeReader_BarcodesDetected(object sender, ZXing.Net.Maui.BarcodeDetectionEventArgs e)
     {
+        if (_procesandoEscaneo) return;
         var first = e.Results.FirstOrDefault();
-        if (first is null)
+        if (first is null || string.IsNullOrWhiteSpace(first.Value))
             return;
-        barcodeReader.IsDetecting = false;
-        Dispatcher.Dispatch(() =>
+        _procesandoEscaneo = true;
+        string codigoLeido = first.Value.Trim();
+        Dispatcher.Dispatch(async() =>
         {
-            txtCodigo.IsEnabled = true;
-            txtCodigo.Focus();
-            txtCodigo.Text = first.Value;
-            ActualizarTextBox();
-            barcodeReader.IsDetecting = true;
-            txtCodigo.IsEnabled = false;
+            try
+            {
+                if (codigoLeido.Length < 25)
+                {
+                    DisplayAlert("Error", "Codigo Invalido", "Aceptar");
+                    return;
+                }
+                contexto.Agregar(codigoLeido);
+            }
+            catch (Exception ex) {
+                DisplayAlert("Error", ex.Message, "Aceptar");
+            }
+            finally
+            {
+                await Task.Delay(1500);
+                _procesandoEscaneo = false;
+            }
         });
         
     }
@@ -66,5 +71,58 @@ public partial class AgregarCajaView : ContentPage
         }
         _AbiertoActualmente = swipeViewActual;
     }
+    //Boton UI editar presionado
+    private void SwipeItem_Clicked(object sender, EventArgs e)
+    {
+        Dispatcher.Dispatch(() =>
+        {
+            txtCodigo.IsEnabled = true;
+            txtCodigo.Focus();
+            txtRango.IsEnabled = true;
+            txtPeso.IsEnabled = true;
+            BtnAceptar.Text = "Editar";
+            BtnAceptar.Command = contexto.EditarCommand;
+        });
+    }
 
+    private void BtnAceptar_Clicked(object sender, EventArgs e)
+    {
+        if (BtnAceptar.Command == contexto.EditarCommand)
+        {
+            Dispatcher.Dispatch(() =>
+            {
+                txtCodigo.IsEnabled = false;
+                txtRango.IsEnabled = false;
+                txtPeso.IsEnabled = false;
+                BtnAceptar.Text= "Agregar";
+                BtnAceptar.Command = contexto.AgregarCommand;
+            });
+        }
+    }
+    //Enviar los datos a la base de datos
+    private async void Enviar_Datos_Clicked(object sender, EventArgs e)
+    {
+        if (contexto.ListaCajas.Count == 0)
+        {
+            await DisplayAlert("Error", "No hay cajas para enviar", "Aceptar");
+            return;
+        }
+        await DisplayAlert("Éxito","Datos enviados correctamente","Aceptar");
+    }
+    //Eliminar botón presionado
+    private async void Eliminar_Clicked(object sender, EventArgs e)
+    {
+        Dispatcher.Dispatch(() => {
+            txtCodigo.IsEnabled = false;
+            txtRango.IsEnabled = false;
+            txtPeso.IsEnabled = false;
+            BtnAceptar.Text = "Agregar";
+            BtnAceptar.Command = contexto.AgregarCommand;
+        });
+        var objSwipe = (SwipeItem)sender;
+        CajasModel caja_Parametro = (CajasModel)objSwipe.CommandParameter;
+        bool res = await DisplayAlert("Confirmacion", "¿Está seguro de eliminar este elemento?", "Confirmar", "Cancelar");
+        if (res) 
+            contexto.Eliminar(caja_Parametro);
+    }
 }

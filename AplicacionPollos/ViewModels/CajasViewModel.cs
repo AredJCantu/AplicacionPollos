@@ -41,7 +41,6 @@ namespace AplicacionPollos.ViewModels
         public List<string> ListaErrores { get; set; } = new();
         public Vistas VistaActual { get; set; }
         public ICommand AgregarCommand { get; set; }
-        public ICommand EliminarCommand { get; set; }
         public ICommand VerEditarCommand { get; set; }
         public ICommand EditarCommand { get; set; } 
         public string contadorCajas { get { return "Cajas: " + ListaCajas.Count(); } }
@@ -51,7 +50,6 @@ namespace AplicacionPollos.ViewModels
         public CajasViewModel()
         {
             AgregarCommand = new RelayCommand<string>(Agregar);
-            EliminarCommand = new RelayCommand(Eliminar);
             EditarCommand = new RelayCommand(Editar);
             CambiarVistaCommand = new RelayCommand<Vistas>(CambiarVista);
             VerEditarCommand = new RelayCommand<CajasModel>(VerEditar);
@@ -61,7 +59,17 @@ namespace AplicacionPollos.ViewModels
         {
             if (model!=null)
             {
-                CajaModel = model;
+                CajaModel = new CajasModel
+                {
+                    id = model.id,
+                    temp_id = model.temp_id,
+                    codigo_barras = model.codigo_barras,
+                    GTIN = model.GTIN,
+                    numero_lote = model.numero_lote,
+                    peso = model.peso,
+                    numero_piezas = model.numero_piezas,
+                    rango_peso = model.rango_peso
+                };
                 ListaErrores.Clear();
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CajaModel)));
             }
@@ -90,31 +98,42 @@ namespace AplicacionPollos.ViewModels
 
         public async void Agregar(string codigo_barras)
         {
-            if (ListaCajas.Any(x => x.codigo_barras == codigo_barras)) return;
+            if (string.IsNullOrWhiteSpace(codigo_barras) || ListaCajas.Any(x => x.codigo_barras == codigo_barras))
+                return;
             CajasModel cajaParaLista = new();
             int temp_id = ListaCajas.LastOrDefault() == null ? 1 : ListaCajas.LastOrDefault().temp_id + 1;
             cajaParaLista.temp_id = temp_id;
             cajaParaLista.codigo_barras = codigo_barras;
-            switch (ValidarCodigoBarras(codigo_barras))
-            {
-                case Estandares.Empiezan_Por_2:
-                    cajaParaLista.GTIN = codigo_barras.Substring(2, 4);
-                    cajaParaLista.numero_lote = int.Parse(codigo_barras.Substring(6, 4));
-                    cajaParaLista.numero_piezas = int.Parse(codigo_barras.Substring(11, 2));
-                    cajaParaLista.peso = decimal.Parse(codigo_barras.Substring(12, 5)) / 1000m;
-                    cajaParaLista.rango_peso= categorias[codigo_barras.Substring(2, 4)]; break;
-                case Estandares.Pilgrim: //TODO: Identificar donde viene el número de piezas, o si es un producto estandarizado y no tiene variación en la cantidad de piezas.
-                    cajaParaLista.GTIN = codigo_barras.Substring(0, 9);
-                    cajaParaLista.numero_lote = int.Parse(codigo_barras.Substring(23, 10));
-                    cajaParaLista.peso = decimal.Parse(codigo_barras.Substring(11, 5)) / 100m; break;
-                default: ListaErrores.Add("ERROR BCR_01: Código de barras no identificado."); break;
+            try {
+                switch (ValidarCodigoBarras(codigo_barras))
+                {
+                    case Estandares.Empiezan_Por_2:
+                        cajaParaLista.GTIN = codigo_barras.Substring(2, 4);
+                        cajaParaLista.numero_lote = int.Parse(codigo_barras.Substring(6, 4));
+                        cajaParaLista.numero_piezas = int.Parse(codigo_barras.Substring(11, 2));
+                        cajaParaLista.peso = decimal.Parse(codigo_barras.Substring(12, 5)) / 1000m;
+                        cajaParaLista.rango_peso = categorias[codigo_barras.Substring(2, 4)]; break;
+                    case Estandares.Pilgrim: //TODO: Identificar donde viene el número de piezas, o si es un producto estandarizado y no tiene variación en la cantidad de piezas.
+                        cajaParaLista.GTIN = codigo_barras.Substring(0, 9);
+                        cajaParaLista.numero_lote = int.Parse(codigo_barras.Substring(23, 10));
+                        cajaParaLista.peso = decimal.Parse(codigo_barras.Substring(11, 5)) / 100m; break;
+                    default: ListaErrores.Add("ERROR BCR_01: Código de barras no identificado."); break;
+                }
+            }
+            catch(Exception ex) {
+                ListaErrores.Add($"Error procesando código: {ex.Message}");
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListaErrores)));
+                return;
             }
             ListaCajas.Add(cajaParaLista);
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListaCajas)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(contadorCajas)));
             //Reproduccion de sonido beep
-            var stream = await FileSystem.OpenAppPackageFileAsync("beep.mp3");
-            var reproductor = AudioManager.Current.CreatePlayer(stream);
-            reproductor.Play();
+            try {
+                //var stream = await FileSystem.OpenAppPackageFileAsync("beep.mp3");
+                //var reproductor = AudioManager.Current.CreatePlayer(stream);
+                //reproductor.Play();
+            }
+            catch { }
 
 
             CajaModel = new() {
@@ -130,12 +149,12 @@ namespace AplicacionPollos.ViewModels
 
         }
 
-        public void Eliminar()
+        public void Eliminar(CajasModel copia)
         {
-            ListaCajas.Remove(CajaModel);
-            CambiarVista(Vistas.Agregar);
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(VistaActual)));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListaCajas)));
+            ListaCajas.Remove(copia);
+            CajaModel = new();
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CajaModel)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(contadorCajas)));
         }
 
         public void Editar()
@@ -146,7 +165,7 @@ namespace AplicacionPollos.ViewModels
             ListaCajas[indice] = CajaModel;
             CambiarVista(Vistas.Agregar);
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(VistaActual)));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListaCajas)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(contadorCajas)));
         }
 
         private void CambiarVista(Vistas vista)
