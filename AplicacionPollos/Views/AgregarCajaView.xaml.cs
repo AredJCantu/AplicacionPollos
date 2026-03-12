@@ -8,27 +8,47 @@ namespace AplicacionPollos.Views;
 
 public partial class AgregarCajaView : ContentPage
 {
-    private SwipeView _AbiertoActualmente;
-    private bool _procesandoEscaneo = false;
-    CajasViewModel contexto; 
-    public AgregarCajaView()
+	private SwipeView _AbiertoActualmente;
+	private bool _procesandoEscaneo = false;
+	CajasViewModel contexto; 
+	public AgregarCajaView()
 	{
 		InitializeComponent();
-        barcodeReader.Options = new ZXing.Net.Maui.BarcodeReaderOptions
-        {
-            AutoRotate = true,
-            Multiple = true
-        };
-        contexto=(CajasViewModel)this.BindingContext;
-    }
-	
+		barcodeReader.Options = new ZXing.Net.Maui.BarcodeReaderOptions
+		{
+			AutoRotate = true,
+			Multiple = true
+		};
+		contexto = (CajasViewModel)this.BindingContext;
+	}
 
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        await RequestCameraPermission();
         await Task.Delay(100);
         txtCodigo.Focus();
-        
+    }
+
+    private async Task RequestCameraPermission()
+    {
+        try
+        {
+            var status = await Permissions.CheckStatusAsync<Permissions.Camera>();
+            if (status != PermissionStatus.Granted)
+            {
+                status = await Permissions.RequestAsync<Permissions.Camera>();
+            }
+
+            if (status != PermissionStatus.Granted)
+            {
+                await DisplayAlert("Permisos", "Se requiere permiso de cámara para escanear códigos de barras", "Aceptar");
+            }
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Error", $"Error solicitando permiso de cámara: {ex.Message}", "Aceptar");
+        }
     }
 
     private void barcodeReader_BarcodesDetected(object sender, ZXing.Net.Maui.BarcodeDetectionEventArgs e)
@@ -43,15 +63,21 @@ public partial class AgregarCajaView : ContentPage
         {
             try
             {
-                if (codigoLeido.Length < 25)
+                // Validación básica de longitud
+                if (codigoLeido.Length < 20)
                 {
-                    DisplayAlert("Error", "Codigo Invalido", "Aceptar");
+                    await DisplayAlert("Error", "Código de barras muy corto. Mínimo 20 caracteres", "Aceptar");
+                    return;
+                }
+                if (codigoLeido.Length > 50)
+                {
+                    await DisplayAlert("Error", "Código de barras muy largo. Máximo 50 caracteres", "Aceptar");
                     return;
                 }
                 contexto.Agregar(codigoLeido);
             }
             catch (Exception ex) {
-                DisplayAlert("Error", ex.Message, "Aceptar");
+                await DisplayAlert("Error", $"Error al procesar el código: {ex.Message}", "Aceptar");
             }
             finally
             {
@@ -59,7 +85,7 @@ public partial class AgregarCajaView : ContentPage
                 _procesandoEscaneo = false;
             }
         });
-        
+
     }
     //Cerrar el menu swipe cuando otro este avierto
     private void SwipeView_SwipeStarted(object sender, SwipeStartedEventArgs e)

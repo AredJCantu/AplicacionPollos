@@ -91,6 +91,23 @@ namespace AplicacionPollos.ViewModels
             return Estandares.Ninguno;
         }
 
+        private bool TryParseSubstring(string source, int startIndex, int length, out string result)
+        {
+            result = null;
+            if (source == null || startIndex + length > source.Length)
+                return false;
+
+            try
+            {
+                result = source.Substring(startIndex, length);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         private async Task<List<CajasModel>> ObtenerCajas() // TODO: Evaluar si se necesita o no
         {
             return await contexto.ObtenerCajasAsync();
@@ -108,16 +125,68 @@ namespace AplicacionPollos.ViewModels
                 switch (ValidarCodigoBarras(codigo_barras))
                 {
                     case Estandares.Empiezan_Por_2:
-                        cajaParaLista.GTIN = codigo_barras.Substring(2, 4);
-                        cajaParaLista.numero_lote = int.Parse(codigo_barras.Substring(6, 4));
-                        cajaParaLista.numero_piezas = int.Parse(codigo_barras.Substring(11, 2));
-                        cajaParaLista.peso = decimal.Parse(codigo_barras.Substring(12, 5)) / 1000m;
-                        cajaParaLista.rango_peso = categorias[codigo_barras.Substring(2, 4)]; break;
-                    case Estandares.Pilgrim: //TODO: Identificar donde viene el número de piezas, o si es un producto estandarizado y no tiene variación en la cantidad de piezas.
-                        cajaParaLista.GTIN = codigo_barras.Substring(0, 9);
-                        cajaParaLista.numero_lote = int.Parse(codigo_barras.Substring(23, 10));
-                        cajaParaLista.peso = decimal.Parse(codigo_barras.Substring(11, 5)) / 100m; break;
-                    default: ListaErrores.Add("ERROR BCR_01: Código de barras no identificado."); break;
+                        // Validar longitud mínima y extraer subcadenas de forma segura
+                        if (!TryParseSubstring(codigo_barras, 2, 4, out var gtin) ||
+                            !TryParseSubstring(codigo_barras, 6, 4, out var lote_str) ||
+                            !TryParseSubstring(codigo_barras, 11, 2, out var piezas_str) ||
+                            !TryParseSubstring(codigo_barras, 12, 5, out var peso_str))
+                        {
+                            ListaErrores.Add("ERROR BCR_02: Formato de código inválido para estándar Empiezan_Por_2.");
+                            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListaErrores)));
+                            return;
+                        }
+
+                        if (!int.TryParse(lote_str, out var numero_lote) ||
+                            !int.TryParse(piezas_str, out var numero_piezas) ||
+                            !decimal.TryParse(peso_str, out var peso_valor))
+                        {
+                            ListaErrores.Add("ERROR BCR_03: No se pudieron parsear los valores numéricos.");
+                            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListaErrores)));
+                            return;
+                        }
+
+                        if (!categorias.ContainsKey(gtin))
+                        {
+                            ListaErrores.Add($"ERROR BCR_04: GTIN '{gtin}' no encontrado en categorías.");
+                            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListaErrores)));
+                            return;
+                        }
+
+                        cajaParaLista.GTIN = gtin;
+                        cajaParaLista.numero_lote = numero_lote;
+                        cajaParaLista.numero_piezas = numero_piezas;
+                        cajaParaLista.peso = peso_valor / 1000m;
+                        cajaParaLista.rango_peso = categorias[gtin];
+                        break;
+
+                    case Estandares.Pilgrim:
+                        //TODO: Identificar donde viene el número de piezas, o si es un producto estandarizado y no tiene variación en la cantidad de piezas.
+                        if (!TryParseSubstring(codigo_barras, 0, 9, out var gtin_pilgrim) ||
+                            !TryParseSubstring(codigo_barras, 23, 10, out var lote_pilgrim_str) ||
+                            !TryParseSubstring(codigo_barras, 11, 5, out var peso_pilgrim_str))
+                        {
+                            ListaErrores.Add("ERROR BCR_05: Formato de código inválido para estándar Pilgrim.");
+                            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListaErrores)));
+                            return;
+                        }
+
+                        if (!int.TryParse(lote_pilgrim_str, out var numero_lote_pilgrim) ||
+                            !decimal.TryParse(peso_pilgrim_str, out var peso_valor_pilgrim))
+                        {
+                            ListaErrores.Add("ERROR BCR_06: No se pudieron parsear los valores numéricos del estándar Pilgrim.");
+                            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListaErrores)));
+                            return;
+                        }
+
+                        cajaParaLista.GTIN = gtin_pilgrim;
+                        cajaParaLista.numero_lote = numero_lote_pilgrim;
+                        cajaParaLista.peso = peso_valor_pilgrim / 100m;
+                        break;
+
+                    default: 
+                        ListaErrores.Add("ERROR BCR_01: Código de barras no identificado."); 
+                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListaErrores)));
+                        return;
                 }
             }
             catch(Exception ex) {
@@ -129,9 +198,9 @@ namespace AplicacionPollos.ViewModels
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(contadorCajas)));
             //Reproduccion de sonido beep
             try {
-                //var stream = await FileSystem.OpenAppPackageFileAsync("beep.mp3");
-                //var reproductor = AudioManager.Current.CreatePlayer(stream);
-                //reproductor.Play();
+                var stream = await FileSystem.OpenAppPackageFileAsync("beep.mp3");
+                var reproductor = AudioManager.Current.CreatePlayer(stream);
+                reproductor.Play();
             }
             catch { }
 
@@ -160,9 +229,10 @@ namespace AplicacionPollos.ViewModels
         public void Editar()
         {
             if (CajaModel == null) return;
-            int indice = ListaCajas.IndexOf(CajaModel);
-            if (ListaCajas.Any(x => x.codigo_barras == CajaModel.codigo_barras) && ListaCajas[indice].temp_id != CajaModel.temp_id) return;
-            ListaCajas[indice] = CajaModel;
+            int indice = CajaModel.temp_id;
+            if(indice<1) return;
+            if (ListaCajas.Any(x => x.codigo_barras == CajaModel.codigo_barras) && ListaCajas[indice-1].temp_id != CajaModel.temp_id) return;
+            ListaCajas[indice-1] = CajaModel;
             CambiarVista(Vistas.Agregar);
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(VistaActual)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(contadorCajas)));

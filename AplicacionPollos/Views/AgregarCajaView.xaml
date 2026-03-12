@@ -98,8 +98,7 @@
                                 Clicked="Eliminar_Clicked"
                                CommandParameter="{Binding .}" >
                                         <SwipeItem.IconImageSource>
-                                            <FontImageSource FontFamily="Material" Glyph="&#xe872;" Color="White
-                                                             "/>
+                                            <FontImageSource FontFamily="Material" Glyph="&#xe872;" Color="White"/>
                                         </SwipeItem.IconImageSource>
                                     </SwipeItem>
                                 </SwipeItems>
