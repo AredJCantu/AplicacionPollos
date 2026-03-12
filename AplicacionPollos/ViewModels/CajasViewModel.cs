@@ -287,5 +287,6 @@ namespace AplicacionPollos.ViewModels
             ListaErrores.Clear();
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListaErrores)));
         }
+        
     }
 }

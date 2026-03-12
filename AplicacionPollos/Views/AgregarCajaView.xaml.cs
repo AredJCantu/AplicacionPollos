@@ -20,7 +20,15 @@ public partial class AgregarCajaView : ContentPage
 			Multiple = true
 		};
 		contexto = (CajasViewModel)this.BindingContext;
+		contexto.PropertyChanged += OnViewModelPropertyChanged;
 	}
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        if (contexto != null)
+            contexto.PropertyChanged -= OnViewModelPropertyChanged;
+    }
 
     protected override async void OnAppearing()
     {
@@ -28,6 +36,16 @@ public partial class AgregarCajaView : ContentPage
         await RequestCameraPermission();
         await Task.Delay(100);
         txtCodigo.Focus();
+    }
+
+    private async void OnViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(CajasViewModel.ListaErrores) && contexto.ListaErrores.Count > 0)
+        {
+            // Concatenar todos los errores con saltos de línea
+            string mensajeErrores = string.Join("\n", contexto.ListaErrores);
+            await DisplayAlert("Errores", mensajeErrores, "Aceptar");
+        }
     }
 
     private async Task RequestCameraPermission()
@@ -125,6 +143,7 @@ public partial class AgregarCajaView : ContentPage
             });
         }
     }
+
     //Enviar los datos a la base de datos
     private async void Enviar_Datos_Clicked(object sender, EventArgs e)
     {
@@ -133,6 +152,7 @@ public partial class AgregarCajaView : ContentPage
             await DisplayAlert("Error", "No hay cajas para enviar", "Aceptar");
             return;
         }
+        //contexto.EnviarDatos();
         await DisplayAlert("Éxito","Datos enviados correctamente","Aceptar");
     }
     //Eliminar botón presionado
