@@ -121,7 +121,41 @@ namespace AplicacionPollos.ViewModels
             int temp_id = ListaCajas.LastOrDefault() == null ? 1 : ListaCajas.LastOrDefault().temp_id + 1;
             cajaParaLista.temp_id = temp_id;
             cajaParaLista.codigo_barras = codigo_barras;
-            try {
+            bool parseoExitoso = ParsearCodigoDeBarras(codigo_barras, cajaParaLista);
+            if (!parseoExitoso)
+            {
+                return;
+            }
+            ListaCajas.Add(cajaParaLista);
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(contadorCajas)));
+            //Reproduccion de sonido beep
+            try
+            {
+                var stream = await FileSystem.OpenAppPackageFileAsync("beep.mp3");
+                var reproductor = AudioManager.Current.CreatePlayer(stream);
+                reproductor.Play();
+            }
+            catch { }
+
+
+            CajaModel = new()
+            {
+                temp_id = cajaParaLista.temp_id,
+                codigo_barras = cajaParaLista.codigo_barras,
+                GTIN = cajaParaLista.GTIN,
+                numero_lote = cajaParaLista.numero_lote,
+                peso = cajaParaLista.peso,
+                numero_piezas = cajaParaLista.numero_piezas,
+                rango_peso = cajaParaLista.rango_peso
+            };
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CajaModel)));
+
+        }
+
+        private bool ParsearCodigoDeBarras(string codigo_barras, CajasModel cajaParaLista)
+        {
+            try
+            {
                 switch (ValidarCodigoBarras(codigo_barras))
                 {
                     case Estandares.Empiezan_Por_2:
@@ -133,7 +167,7 @@ namespace AplicacionPollos.ViewModels
                         {
                             ListaErrores.Add("ERROR BCR_02: Formato de código inválido para estándar Empiezan_Por_2.");
                             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListaErrores)));
-                            return;
+                            return false;
                         }
 
                         if (!int.TryParse(lote_str, out var numero_lote) ||
@@ -142,14 +176,14 @@ namespace AplicacionPollos.ViewModels
                         {
                             ListaErrores.Add("ERROR BCR_03: No se pudieron parsear los valores numéricos.");
                             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListaErrores)));
-                            return;
+                            return false;
                         }
 
                         if (!categorias.ContainsKey(gtin))
                         {
                             ListaErrores.Add($"ERROR BCR_04: GTIN '{gtin}' no encontrado en categorías.");
                             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListaErrores)));
-                            return;
+                            return false;
                         }
 
                         cajaParaLista.GTIN = gtin;
@@ -167,7 +201,7 @@ namespace AplicacionPollos.ViewModels
                         {
                             ListaErrores.Add("ERROR BCR_05: Formato de código inválido para estándar Pilgrim.");
                             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListaErrores)));
-                            return;
+                            return false;
                         }
 
                         if (!int.TryParse(lote_pilgrim_str, out var numero_lote_pilgrim) ||
@@ -175,7 +209,7 @@ namespace AplicacionPollos.ViewModels
                         {
                             ListaErrores.Add("ERROR BCR_06: No se pudieron parsear los valores numéricos del estándar Pilgrim.");
                             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListaErrores)));
-                            return;
+                            return false;
                         }
 
                         cajaParaLista.GTIN = gtin_pilgrim;
@@ -183,39 +217,20 @@ namespace AplicacionPollos.ViewModels
                         cajaParaLista.peso = peso_valor_pilgrim / 100m;
                         break;
 
-                    default: 
-                        ListaErrores.Add("ERROR BCR_01: Código de barras no identificado."); 
+                    default:
+                        ListaErrores.Add("ERROR BCR_01: Código de barras no identificado.");
                         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListaErrores)));
-                        return;
+                        return false;
                 }
             }
-            catch(Exception ex) {
+            catch (Exception ex)
+            {
                 ListaErrores.Add($"Error procesando código: {ex.Message}");
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListaErrores)));
-                return;
+                return false;
             }
-            ListaCajas.Add(cajaParaLista);
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(contadorCajas)));
-            //Reproduccion de sonido beep
-            try {
-                var stream = await FileSystem.OpenAppPackageFileAsync("beep.mp3");
-                var reproductor = AudioManager.Current.CreatePlayer(stream);
-                reproductor.Play();
-            }
-            catch { }
 
-
-            CajaModel = new() {
-                temp_id = cajaParaLista.temp_id,
-                codigo_barras = cajaParaLista.codigo_barras,
-                GTIN = cajaParaLista.GTIN,
-                numero_lote = cajaParaLista.numero_lote,
-                peso = cajaParaLista.peso,
-                numero_piezas = cajaParaLista.numero_piezas,
-                rango_peso = cajaParaLista.rango_peso
-            };
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CajaModel)));
-
+            return true;
         }
 
         public void Eliminar(CajasModel copia)
@@ -230,10 +245,13 @@ namespace AplicacionPollos.ViewModels
         {
             if (CajaModel == null) return;
             int indice = CajaModel.temp_id;
-            if(indice<1) return;
-            if (ListaCajas.Any(x => x.codigo_barras == CajaModel.codigo_barras) && ListaCajas[indice-1].temp_id != CajaModel.temp_id) return;
-            ListaCajas[indice-1] = CajaModel;
+            if(indice <= 0) return;
+            if (ListaCajas.Any(x => x.codigo_barras == CajaModel.codigo_barras && x.temp_id == CajaModel.temp_id)) return;
+            if(ParsearCodigoDeBarras(CajaModel.codigo_barras, CajaModel));
+            ListaCajas[CajaModel.temp_id - 1] = CajaModel;
             CambiarVista(Vistas.Agregar);
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListaCajas)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CajaModel)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(VistaActual)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(contadorCajas)));
         }
