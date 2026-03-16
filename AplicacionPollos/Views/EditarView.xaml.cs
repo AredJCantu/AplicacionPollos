@@ -4,10 +4,10 @@ namespace AplicacionPollos.Views;
 
 public partial class EditarView : ContentPage
 {
-	CajasViewModel contexto = new();
+	private CajasViewModel contexto => (CajasViewModel)BindingContext;
+
 	public EditarView()
 	{
 		InitializeComponent();
-
 	}
 }
