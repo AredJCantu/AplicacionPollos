@@ -35,14 +35,16 @@ namespace AplicacionPollos.ViewModels
             { "1256", 5},
             { "1257", 6}
         };
-        CajasRepository contexto = new();
+        GestionadorCajas contexto = new();
         public ObservableCollection<CajasModel> ListaCajas { get; set; } = new();
+        public ObservableCollection<CajasModel> ListaCajasCompleta { get; set; } = new();
         public CajasModel? CajaModel { get; set; } = new();
         public List<string> ListaErrores { get; set; } = new();
         public Vistas VistaActual { get; set; }
         public ICommand AgregarCommand { get; set; }
         public ICommand VerEditarCommand { get; set; }
         public ICommand EditarCommand { get; set; } 
+        public ICommand ImprimirReporteCommand { get; set; }
         public string contadorCajas { get { return "Cajas: " + ListaCajas.Count(); } }
         public ICommand CambiarVistaCommand { get; set; }
 
@@ -53,6 +55,8 @@ namespace AplicacionPollos.ViewModels
             EditarCommand = new RelayCommand(Editar);
             CambiarVistaCommand = new RelayCommand<Vistas>(CambiarVista);
             VerEditarCommand = new RelayCommand<CajasModel>(VerEditar);
+            ImprimirReporteCommand = new RelayCommand(ImprimirReporte);
+            contexto.EliminarTodasLasCajas();
         }
 
         private void VerEditar(CajasModel? model) //TODO: Evaluar si se necesita.
@@ -108,10 +112,6 @@ namespace AplicacionPollos.ViewModels
             }
         }
 
-        private async Task<List<CajasModel>> ObtenerCajas() // TODO: Evaluar si se necesita o no
-        {
-            return await contexto.ObtenerCajasAsync();
-        }
 
         public async void Agregar(string codigo_barras)
         {
@@ -237,7 +237,10 @@ namespace AplicacionPollos.ViewModels
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(VistaActual)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(contadorCajas)));
         }
-
+        public void EnviarDatos()
+        {
+            contexto.AgregarCajas(ListaCajas);
+        }
         private void CambiarVista(Vistas vista)
         {
             switch (vista)
@@ -288,5 +291,41 @@ namespace AplicacionPollos.ViewModels
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListaErrores)));
         }
         
+        public void verInventario()
+        {
+            Shell.Current.GoToAsync("//Inventario_view");
+            ListaCajasCompleta.Clear();
+            foreach (var caja in contexto.GetAll())
+            {
+                ListaCajasCompleta.Add(caja);
+            }
+
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListaCajas)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(contadorCajas)));
+        }
+
+        public void EliminarDesdeBD(int id)
+        {
+            bool resultado = contexto.EliminarCaja(id);
+            if (resultado)
+            {
+                var cajaAEliminar = ListaCajas.FirstOrDefault(c => c.id == id);
+                if (cajaAEliminar != null)
+                {
+                    ListaCajas.Remove(cajaAEliminar);
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListaCajas)));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(contadorCajas)));
+                }
+            }
+            else
+            {
+                ListaErrores.AddRange(contexto.Errores);
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListaErrores)));
+            }
+        }
+        public async void ImprimirReporte()
+        {
+            await contexto.ImprimirExcel();
+        }
     }
 }

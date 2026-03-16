@@ -11,15 +11,16 @@ public partial class AgregarCajaView : ContentPage
 	private SwipeView _AbiertoActualmente;
 	private bool _procesandoEscaneo = false;
 	CajasViewModel contexto; 
-	public AgregarCajaView()
+	public AgregarCajaView(CajasViewModel viewModel)
 	{
 		InitializeComponent();
+		BindingContext = viewModel;
 		barcodeReader.Options = new ZXing.Net.Maui.BarcodeReaderOptions
 		{
 			AutoRotate = true,
 			Multiple = true
 		};
-		contexto = (CajasViewModel)this.BindingContext;
+		contexto = viewModel;
 		contexto.PropertyChanged += OnViewModelPropertyChanged;
 	}
 
@@ -152,10 +153,19 @@ public partial class AgregarCajaView : ContentPage
             await DisplayAlert("Error", "No hay cajas para enviar", "Aceptar");
             return;
         }
-        //contexto.EnviarDatos();
-        await DisplayAlert("Éxito","Datos enviados correctamente","Aceptar");
+        contexto.EnviarDatos();
+        if (contexto.ListaErrores.Count > 0)
+        {
+            string mensajeErrores = string.Join("\n", contexto.ListaErrores);
+            await DisplayAlert("Advertencia", $"Se guardaron algunas cajas con errores:\n{mensajeErrores}", "Aceptar");
+        }
+        else
+        {
+            await DisplayAlert("Éxito", "Datos enviados correctamente", "Aceptar");
+            contexto.ListaCajas.Clear();
+        }
+
     }
-    //Eliminar botón presionado
     private async void Eliminar_Clicked(object sender, EventArgs e)
     {
         Dispatcher.Dispatch(() => {
@@ -170,5 +180,10 @@ public partial class AgregarCajaView : ContentPage
         bool res = await DisplayAlert("Confirmacion", "¿Está seguro de eliminar este elemento?", "Confirmar", "Cancelar");
         if (res) 
             contexto.Eliminar(caja_Parametro);
+    }
+
+    private void VerInventario(object sender, EventArgs e)
+    {
+        contexto.verInventario();
     }
 }

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="AplicacionPollos.Views.InventarioView"
+             Title="Inventario">
+    <VerticalStackLayout>
+        <Border Stroke="Black" StrokeThickness="2" Padding="5" Margin="10">
+            <CollectionView x:Name="CLWLista" SelectionMode="Single" ItemsSource="{Binding ListaCajasCompleta}">
+                <CollectionView.Resources>
+                    <Style TargetType="Label">
+                        <Setter Property="HorizontalTextAlignment" Value="Center" />
+                        <Setter Property="Margin" Value="2, 0"/>
+                        <Setter Property="FontSize" Value="25"/>
+                    </Style>
+                </CollectionView.Resources>
+                <CollectionView.Header>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Grid.Column="0" Text="ID" FontAttributes="Bold"></Label>
+                        <Label Grid.Column="1" Text="Lote" FontAttributes="Bold"></Label>
+                        <Label Grid.Column="2" Text="Rango" FontAttributes="Bold"></Label>
+                        <Label Grid.Column="3" Text="Peso" FontAttributes="Bold"></Label>
+                    </Grid>
+                </CollectionView.Header>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <SwipeView SwipeStarted="SwipeView_SwipeStarted">
+                            <SwipeView.RightItems>
+                                <SwipeItems>
+                                    <SwipeItem 
+                       BackgroundColor="LightBlue" Clicked="SwipeItem_Clicked"
+                       CommandParameter="{Binding .}" >
+                                        <SwipeItem.IconImageSource>
+                                            <FontImageSource FontFamily="Material" Glyph="&#xe150;" Color="White"/>
+                                        </SwipeItem.IconImageSource>
+                                    </SwipeItem>
+
+                                    <SwipeItem x:Name="Eliminar"
+                       BackgroundColor="LightPink"
+                        Clicked="Eliminar_Clicked"
+                       CommandParameter="{Binding .}" >
+                                        <SwipeItem.IconImageSource>
+                                            <FontImageSource FontFamily="Material" Glyph="&#xe872;" Color="White"/>
+                                        </SwipeItem.IconImageSource>
+                                    </SwipeItem>
+                                </SwipeItems>
+                            </SwipeView.RightItems>
+
+                            <Grid BackgroundColor="White">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Label Grid.Column="0" Text="{Binding id}"/>
+                                <Label Grid.Column="1" Text="{Binding numero_lote}"/>
+                                <Label Grid.Column="2" Text="{Binding rango_peso}"/>
+                                <Label Grid.Column="3" Text="{Binding peso}"/>
+                            </Grid>
+                        </SwipeView>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Border>
+        <Button Margin="10" Text="Imprimir Excel" Command="{Binding ImprimirReporteCommand}" HeightRequest="50" BackgroundColor="Green" TextColor="White">
+            <Button.ImageSource>
+                <FontImageSource FontFamily="Material" Glyph="&#xe24d;" Color="White" Size="20"/>
+            </Button.ImageSource>
+        </Button>
+        <Button Margin="10" x:Name="BtnVolver" Clicked="BtnVolver_Clicked" Text="Volver" HeightRequest="50" BackgroundColor="OrangeRed" TextColor="White"></Button>
+    </VerticalStackLayout>
+</ContentPage>

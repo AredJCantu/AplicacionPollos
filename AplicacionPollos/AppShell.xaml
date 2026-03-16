@@ -10,12 +10,14 @@
     Shell.NavBarIsVisible="False"
     Shell.FlyoutBehavior="Disabled"
     Title="AplicacionPollos">
-    <Shell.BindingContext>
-        <vm:CajasViewModel></vm:CajasViewModel>
-    </Shell.BindingContext>
     <ShellContent
 ContentTemplate="{DataTemplate views:AgregarCajaView}"
 Route="Agregar_Caja"
+    ></ShellContent>
+
+    <ShellContent
+ContentTemplate="{DataTemplate views:InventarioView}"
+Route="Inventario_view"
     ></ShellContent>
 
 </Shell>

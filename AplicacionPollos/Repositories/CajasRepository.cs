@@ -1,4 +1,5 @@
 ﻿using AplicacionPollos.Models;
+using AplicacionPollos.Services;
 using SQLite;
 using System;
 using System.Collections.Generic;
@@ -10,6 +11,7 @@ namespace AplicacionPollos.Repositories
 {
     public class GestionadorCajas
     {
+        ImprimirExcel excel = new();
         SQLiteConnection context;
         public List<string> Errores;
 
@@ -21,6 +23,7 @@ namespace AplicacionPollos.Repositories
         }
 
         //Create
+
         public bool AgregarCaja(CajasModel caja)
         {
             Errores = new List<string>();
@@ -48,6 +51,36 @@ namespace AplicacionPollos.Repositories
 
             context.Insert(caja);
             return true;
+        }
+        public void AgregarCajas(IEnumerable<CajasModel> cajas)
+        {
+            Errores = new List<string>();
+            List<CajasModel> cajasAgregadas = new List<CajasModel>();
+            foreach (var caja in cajas)
+            {
+                if (string.IsNullOrWhiteSpace(caja.codigo_barras))
+                {
+                    Errores.Add($"La caja con temp_id {caja.temp_id} tiene un código de barras vacío.");
+                    continue;
+                }
+                if (caja.peso <= 0)
+                {
+                    Errores.Add($"La caja con temp_id {caja.temp_id} tiene un peso inválido.");
+                    continue;
+                }
+                if (caja.numero_lote <= 0)
+                {
+                    Errores.Add($"La caja con temp_id {caja.temp_id} tiene un número de lote inválido.");
+                    continue;
+                }
+                if (caja.rango_peso <= 0)
+                {
+                    Errores.Add($"La caja con temp_id {caja.temp_id} tiene un rango de peso inválido.");
+                    continue;
+                }
+                context.Insert(caja);
+                cajasAgregadas.Add(caja);
+            }
         }
 
         //Read
@@ -109,12 +142,6 @@ namespace AplicacionPollos.Repositories
             c.numero_lote = caja.numero_lote;
             c.rango_peso = caja.rango_peso;
             c.peso = caja.peso;
-            c.numero_id = caja.numero_id;
-            c.numero_empleado = caja.numero_empleado;
-            c.numero_planta = caja.numero_planta;
-            c.numero_piezas = caja.numero_piezas;
-            c.id_producto = caja.id_producto;
-            c.proveedor = caja.proveedor;
 
             context.Update(c);
             return true;
@@ -134,6 +161,15 @@ namespace AplicacionPollos.Repositories
 
             context.Delete(caja);
             return true;
+        }
+        //borrar todas las cajas
+        public void EliminarTodasLasCajas()
+        {
+            context.DeleteAll<CajasModel>();
+        }
+        public async Task ImprimirExcel()
+        {
+            await excel.CrearYAbrirExcel(GetAll().ToList());
         }
     }
 }

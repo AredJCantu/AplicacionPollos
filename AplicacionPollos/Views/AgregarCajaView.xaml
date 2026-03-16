@@ -19,9 +19,6 @@
             <Setter Property="FontSize" Value="22"></Setter>
         </Style>
     </ContentPage.Resources>
-    <ContentPage.BindingContext>
-        <vm:CajasViewModel></vm:CajasViewModel>
-    </ContentPage.BindingContext>
     <VerticalStackLayout>
         <Border Margin="10,0,10,0" Stroke="Black" StrokeThickness="2">
             <Grid>
@@ -122,5 +119,6 @@
             </CollectionView>
         </Border>
         <Button Margin="10" x:Name="Enviar_Datos" Clicked="Enviar_Datos_Clicked" Text="Enviar datos" HeightRequest="50" BackgroundColor="OrangeRed" TextColor="White"></Button>
+        <Button Margin="10" x:Name="BtnVerInventario" Clicked="VerInventario" Text="Ver cajas" HeightRequest="50" BackgroundColor="OrangeRed" TextColor="White"></Button>
     </VerticalStackLayout>
 </ContentPage>

@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using AplicacionPollos.ViewModels;
+using AplicacionPollos.Views;
+using Microsoft.Extensions.Logging;
 using Plugin.Maui.Audio;
 using ZXing.Net.Maui.Controls;
 namespace AplicacionPollos
@@ -19,8 +21,15 @@ namespace AplicacionPollos
                     fonts.AddFont("MaterialIcons-Regular.ttf", "Material");
                 });
 
+            // Registrar el ViewModel como Singleton para compartir la misma instancia
+            builder.Services.AddSingleton<CajasViewModel>();
+
+            // Registrar las Views
+            builder.Services.AddTransient<AgregarCajaView>();
+            builder.Services.AddTransient<InventarioView>();
+
 #if DEBUG
-    		builder.Logging.AddDebug();
+            builder.Logging.AddDebug();
 #endif
 
             return builder.Build();
