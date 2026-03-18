@@ -195,5 +195,14 @@ public partial class AgregarCajaView : ContentPage
         };
         contexto.Agregar(c.codigo_barras);
 
+        Dispatcher.Dispatch(() =>
+        {
+            txtCodigo.IsEnabled = true;
+            txtCodigo.Focus();
+            txtRango.IsEnabled = true;
+            txtPeso.IsEnabled = true;
+            BtnAceptar.Text = "Editar";
+            BtnAceptar.Command = contexto.EditarCommand;
+        });
     }
 }
