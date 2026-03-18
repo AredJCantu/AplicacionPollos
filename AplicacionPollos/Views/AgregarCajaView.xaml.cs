@@ -186,4 +186,14 @@ public partial class AgregarCajaView : ContentPage
     {
         contexto.verInventario();
     }
+
+    private void Juan_Clicked(object sender, EventArgs e)
+    {
+        CajasModel c = new()
+        {
+            codigo_barras = "271254486922289100162628A",
+        };
+        contexto.Agregar(c.codigo_barras);
+
+    }
 }
