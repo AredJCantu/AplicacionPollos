@@ -182,27 +182,4 @@ public partial class AgregarCajaView : ContentPage
             contexto.Eliminar(caja_Parametro);
     }
 
-    private void VerInventario(object sender, EventArgs e)
-    {
-        contexto.verInventario();
-    }
-
-    private void Juan_Clicked(object sender, EventArgs e)
-    {
-        CajasModel c = new()
-        {
-            codigo_barras = "271254486922289100162628A",
-        };
-        contexto.Agregar(c.codigo_barras);
-
-        Dispatcher.Dispatch(() =>
-        {
-            txtCodigo.IsEnabled = true;
-            txtCodigo.Focus();
-            txtRango.IsEnabled = true;
-            txtPeso.IsEnabled = true;
-            BtnAceptar.Text = "Editar";
-            BtnAceptar.Command = contexto.EditarCommand;
-        });
-    }
 }

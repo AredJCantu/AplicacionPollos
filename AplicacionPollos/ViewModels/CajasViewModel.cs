@@ -246,9 +246,26 @@ namespace AplicacionPollos.ViewModels
             if (CajaModel == null) return;
             int indice = CajaModel.temp_id;
             if(indice <= 0) return;
-            if (ListaCajas.Any(x => x.codigo_barras == CajaModel.codigo_barras && x.temp_id == CajaModel.temp_id)) return;
-            if(ParsearCodigoDeBarras(CajaModel.codigo_barras, CajaModel));
-            ListaCajas[CajaModel.temp_id - 1] = CajaModel;
+
+            // Obtener la caja original
+            CajasModel cajaOriginal = ListaCajas[indice - 1];
+
+            // Verificar si el código de barras cambió
+            bool codigoBarrasChangio = cajaOriginal.codigo_barras != CajaModel.codigo_barras;
+
+            if (codigoBarrasChangio)
+            {
+                // Si el código de barras cambió, validar que no exista otro igual
+                if (ListaCajas.Any(x => x.codigo_barras == CajaModel.codigo_barras && x.temp_id != CajaModel.temp_id))
+                    return;
+
+                // Parsear el nuevo código de barras
+                if (!ParsearCodigoDeBarras(CajaModel.codigo_barras, CajaModel))
+                    return;
+            }
+
+            // Actualizar la caja en la lista
+            ListaCajas[indice - 1] = CajaModel;
             CambiarVista(Vistas.Agregar);
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListaCajas)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CajaModel)));
@@ -258,6 +275,10 @@ namespace AplicacionPollos.ViewModels
         public void EnviarDatos()
         {
             contexto.AgregarCajas(ListaCajas);
+            ListaCajas.Clear();
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(contadorCajas)));
+            CajaModel = new();
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CajaModel)));
         }
         private void CambiarVista(Vistas vista)
         {
@@ -293,7 +314,7 @@ namespace AplicacionPollos.ViewModels
                         id = CajaModel.id,
                         GTIN = CajaModel.GTIN,
                         peso = CajaModel.peso,
-                        numero_lote = CajaModel.numero_lote,
+                            numero_lote = CajaModel.numero_lote,
                         numero_piezas = CajaModel.numero_piezas,
                         codigo_barras = CajaModel.codigo_barras
                     };
@@ -309,18 +330,6 @@ namespace AplicacionPollos.ViewModels
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListaErrores)));
         }
         
-        public void verInventario()
-        {
-            Shell.Current.GoToAsync("//Inventario_view");
-            ListaCajasCompleta.Clear();
-            foreach (var caja in contexto.GetAll())
-            {
-                ListaCajasCompleta.Add(caja);
-            }
-
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListaCajas)));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(contadorCajas)));
-        }
 
         public void EliminarDesdeBD(int id)
         {

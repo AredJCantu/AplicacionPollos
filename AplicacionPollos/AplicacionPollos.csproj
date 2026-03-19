@@ -71,17 +71,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Compile Update="Views\InventarioView.xaml.cs">
-	    <DependentUpon>InventarioView.xaml</DependentUpon>
-	  </Compile>
-	</ItemGroup>
-
-	<ItemGroup>
 	  <MauiXaml Update="Views\AgregarCajaView.xaml">
 		<Generator>MSBuild:Compile</Generator>
-	  </MauiXaml>
-	  <MauiXaml Update="Views\InventarioView.xaml">
-	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	</ItemGroup>
 

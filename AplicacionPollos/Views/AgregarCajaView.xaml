@@ -119,7 +119,6 @@
             </CollectionView>
         </Border>
         <Button Margin="10" x:Name="Enviar_Datos" Clicked="Enviar_Datos_Clicked" Text="Enviar datos" HeightRequest="50" BackgroundColor="OrangeRed" TextColor="White"></Button>
-        <Button Margin="10" x:Name="BtnVerInventario" Clicked="VerInventario" Text="Ver cajas" HeightRequest="50" BackgroundColor="OrangeRed" TextColor="White"></Button>
-        <Button Text="BOTON DE JUAN, NO DE LA UI/UX" x:Name="Juan" Clicked="Juan_Clicked"></Button>
+        <Button  Margin="10" x:Name="Imprimir" Command="{Binding ImprimirReporteCommand}" Text="Imprimir" HeightRequest="50" BackgroundColor="OrangeRed" TextColor="White"></Button>
     </VerticalStackLayout>
 </ContentPage>

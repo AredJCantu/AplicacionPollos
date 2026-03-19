@@ -26,7 +26,6 @@ namespace AplicacionPollos
 
             // Registrar las Views
             builder.Services.AddTransient<AgregarCajaView>();
-            builder.Services.AddTransient<InventarioView>();
 
 #if DEBUG
             builder.Logging.AddDebug();
