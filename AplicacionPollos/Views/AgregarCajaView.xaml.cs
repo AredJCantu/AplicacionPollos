@@ -2,33 +2,33 @@ using AplicacionPollos.Models;
 using AplicacionPollos.ViewModels;
 using Microsoft.Maui.Controls;
 using System.ComponentModel;
+using System.Linq;
+using System.Threading.Tasks;
+using System;
 using ZXing;
 
 namespace AplicacionPollos.Views;
 
 public partial class AgregarCajaView : ContentPage
 {
-	private SwipeView _AbiertoActualmente;
-	private bool _procesandoEscaneo = false;
-	CajasViewModel contexto; 
-	public AgregarCajaView(CajasViewModel viewModel)
-	{
-		InitializeComponent();
-		BindingContext = viewModel;
-		barcodeReader.Options = new ZXing.Net.Maui.BarcodeReaderOptions
-		{
-			AutoRotate = true,
-			Multiple = true
-		};
-		contexto = viewModel;
-		contexto.PropertyChanged += OnViewModelPropertyChanged;
-	}
+    // --- Campos Privados ---
+    private SwipeView _AbiertoActualmente;
+    private bool _procesandoEscaneo = false;
+    private CajasViewModel contexto;
 
-    protected override void OnDisappearing()
+    // --- Constructor y Ciclo de Vida ---
+    public AgregarCajaView(CajasViewModel viewModel)
     {
-        base.OnDisappearing();
-        if (contexto != null)
-            contexto.PropertyChanged -= OnViewModelPropertyChanged;
+        InitializeComponent();
+        BindingContext = viewModel;
+
+        barcodeReader.Options = new ZXing.Net.Maui.BarcodeReaderOptions
+        {
+            AutoRotate = true,
+            Multiple = true
+        };
+
+        contexto = viewModel;
     }
 
     protected override async void OnAppearing()
@@ -39,16 +39,7 @@ public partial class AgregarCajaView : ContentPage
         txtCodigo.Focus();
     }
 
-    private async void OnViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(CajasViewModel.ListaErrores) && contexto.ListaErrores.Count > 0)
-        {
-            // Concatenar todos los errores con saltos de línea
-            string mensajeErrores = string.Join("\n", contexto.ListaErrores);
-            await DisplayAlert("Errores", mensajeErrores, "Aceptar");
-        }
-    }
-
+    // --- Gestión del Escáner y Permisos ---
     private async Task RequestCameraPermission()
     {
         try
@@ -73,16 +64,18 @@ public partial class AgregarCajaView : ContentPage
     private void barcodeReader_BarcodesDetected(object sender, ZXing.Net.Maui.BarcodeDetectionEventArgs e)
     {
         if (_procesandoEscaneo) return;
+
         var first = e.Results.FirstOrDefault();
         if (first is null || string.IsNullOrWhiteSpace(first.Value))
             return;
+
         _procesandoEscaneo = true;
         string codigoLeido = first.Value.Trim();
-        Dispatcher.Dispatch(async() =>
+
+        Dispatcher.Dispatch(async () =>
         {
             try
             {
-                // Validación básica de longitud
                 if (codigoLeido.Length < 20)
                 {
                     await DisplayAlert("Error", "Código de barras muy corto. Mínimo 20 caracteres", "Aceptar");
@@ -93,20 +86,24 @@ public partial class AgregarCajaView : ContentPage
                     await DisplayAlert("Error", "Código de barras muy largo. Máximo 50 caracteres", "Aceptar");
                     return;
                 }
+
                 contexto.Agregar(codigoLeido);
             }
-            catch (Exception ex) {
-                await DisplayAlert("Error", $"Error al procesar el código: {ex.Message}", "Aceptar");
-            }
-            finally
+            catch (Exception ex)
             {
-                await Task.Delay(1500);
-                _procesandoEscaneo = false;
+                await DisplayAlert("Error", $"Error al procesar el código: {ex.Message}", "Aceptar");
             }
         });
 
+        // Retraso fuera del hilo principal para no trabar el UI
+        Task.Run(async () =>
+        {
+            await Task.Delay(1500);
+            _procesandoEscaneo = false;
+        });
     }
-    //Cerrar el menu swipe cuando otro este avierto
+
+    // --- Eventos de la Interfaz Gráfica (UI) ---
     private void SwipeView_SwipeStarted(object sender, SwipeStartedEventArgs e)
     {
         var swipeViewActual = sender as SwipeView;
@@ -116,7 +113,7 @@ public partial class AgregarCajaView : ContentPage
         }
         _AbiertoActualmente = swipeViewActual;
     }
-    //Boton UI editar presionado
+
     private void SwipeItem_Clicked(object sender, EventArgs e)
     {
         Dispatcher.Dispatch(() =>
@@ -139,33 +136,17 @@ public partial class AgregarCajaView : ContentPage
                 txtCodigo.IsEnabled = false;
                 txtRango.IsEnabled = false;
                 txtPeso.IsEnabled = false;
-                BtnAceptar.Text= "Agregar";
+                BtnAceptar.Text = "Agregar";
                 BtnAceptar.Command = contexto.AgregarCommand;
             });
         }
     }
 
-    //Enviar los datos a la base de datos
-    private async void Enviar_Datos_Clicked(object sender, EventArgs e)
+    private void Enviar_Datos_Clicked(object sender, EventArgs e)
     {
-        if (contexto.ListaCajas.Count == 0)
-        {
-            await DisplayAlert("Error", "No hay cajas para enviar", "Aceptar");
-            return;
-        }
         contexto.EnviarDatos();
-        if (contexto.ListaErrores.Count > 0)
-        {
-            string mensajeErrores = string.Join("\n", contexto.ListaErrores);
-            await DisplayAlert("Advertencia", $"Se guardaron algunas cajas con errores:\n{mensajeErrores}", "Aceptar");
-        }
-        else
-        {
-            await DisplayAlert("Éxito", "Datos enviados correctamente", "Aceptar");
-            contexto.ListaCajas.Clear();
-        }
-
     }
+
     private async void Eliminar_Clicked(object sender, EventArgs e)
     {
         Dispatcher.Dispatch(() => {
@@ -175,11 +156,12 @@ public partial class AgregarCajaView : ContentPage
             BtnAceptar.Text = "Agregar";
             BtnAceptar.Command = contexto.AgregarCommand;
         });
+
         var objSwipe = (SwipeItem)sender;
         CajasModel caja_Parametro = (CajasModel)objSwipe.CommandParameter;
-        bool res = await DisplayAlert("Confirmacion", "¿Está seguro de eliminar este elemento?", "Confirmar", "Cancelar");
-        if (res) 
+
+        bool res = await DisplayAlert("Confirmación", "¿Está seguro de eliminar este elemento?", "Confirmar", "Cancelar");
+        if (res)
             contexto.Eliminar(caja_Parametro);
     }
-
 }
