@@ -43,6 +43,7 @@ namespace AplicacionPollos.ViewModels
         public event PropertyChangedEventHandler? PropertyChanged;
 
         // --- Propiedades de Estado y UI ---
+        public bool EditarEntrys { get; set; } = false;
         public bool VistaMensaje { get; set; } = false;
         public string MensajeAlerta { get; set; } = string.Empty;
         public Vistas VistaActual { get; set; }
@@ -90,6 +91,8 @@ namespace AplicacionPollos.ViewModels
             if (!parseoExitoso) return;
 
             ListaCajas.Add(cajaParaLista);
+            EditarEntrys = false;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(EditarEntrys)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(contadorCajas)));
 
             try
@@ -345,7 +348,7 @@ namespace AplicacionPollos.ViewModels
 
                     default:
                         ListaErrores.Add("ERROR BCR_01: Código de barras no identificado.");
-                        ActualizarMensajeUI();
+                        HabilitarEntrys();
                         return false;
                 }
             }
@@ -357,6 +360,13 @@ namespace AplicacionPollos.ViewModels
             }
 
             return true;
+        }
+
+        private void HabilitarEntrys()
+        {
+            ActualizarMensajeUI();
+            EditarEntrys = true;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(EditarEntrys)));
         }
 
         private Estandares ValidarCodigoBarras(string codigo_barras)

@@ -13,7 +13,6 @@ public partial class AgregarCajaView : ContentPage
 {
     // --- Campos Privados ---
     private SwipeView _AbiertoActualmente;
-    private bool _procesandoEscaneo = false;
     private CajasViewModel contexto;
 
     // --- Constructor y Ciclo de Vida ---
@@ -21,86 +20,48 @@ public partial class AgregarCajaView : ContentPage
     {
         InitializeComponent();
         BindingContext = viewModel;
-
-        barcodeReader.Options = new ZXing.Net.Maui.BarcodeReaderOptions
-        {
-            AutoRotate = true,
-            Multiple = true
-        };
-
         contexto = viewModel;
     }
 
     protected override async void OnAppearing()
     {
         base.OnAppearing();
-        await RequestCameraPermission();
         await Task.Delay(100);
+        txtCodigo.IsEnabled = true;
         txtCodigo.Focus();
     }
 
-    // --- Gestión del Escáner y Permisos ---
-    private async Task RequestCameraPermission()
+    // --- Gestión del Escáner Físico ---
+    // Este evento reemplaza al barcodeReader_BarcodesDetected.
+    // Se dispara cuando la terminal termina de leer el código y manda un "Enter".
+    private void txtCodigo_Completed(object sender, EventArgs e)
     {
+        string codigoLeido = txtCodigo.Text?.Trim() ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(codigoLeido))
+        {
+            txtCodigo.Focus();
+            return;
+        }
         try
         {
-            var status = await Permissions.CheckStatusAsync<Permissions.Camera>();
-            if (status != PermissionStatus.Granted)
-            {
-                status = await Permissions.RequestAsync<Permissions.Camera>();
-            }
-
-            if (status != PermissionStatus.Granted)
-            {
-                await DisplayAlert("Permisos", "Se requiere permiso de cámara para escanear códigos de barras", "Aceptar");
-            }
+            // Mandamos el código al ViewModel
+            contexto.Agregar(codigoLeido);
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Error", $"Error solicitando permiso de cámara: {ex.Message}", "Aceptar");
+            DisplayAlert("Error", $"Error al procesar el código: {ex.Message}", "Aceptar");
         }
+
+        // Automáticamente preparamos la pantalla para la siguiente caja de pollo
+        PrepararParaSiguienteEscaneo();
     }
 
-    private void barcodeReader_BarcodesDetected(object sender, ZXing.Net.Maui.BarcodeDetectionEventArgs e)
+    // Método auxiliar para limpiar y re-enfocar rápido
+    private void PrepararParaSiguienteEscaneo()
     {
-        if (_procesandoEscaneo) return;
-
-        var first = e.Results.FirstOrDefault();
-        if (first is null || string.IsNullOrWhiteSpace(first.Value))
-            return;
-
-        _procesandoEscaneo = true;
-        string codigoLeido = first.Value.Trim();
-
-        Dispatcher.Dispatch(async () =>
-        {
-            try
-            {
-                if (codigoLeido.Length < 20)
-                {
-                    await DisplayAlert("Error", "Código de barras muy corto. Mínimo 20 caracteres", "Aceptar");
-                    return;
-                }
-                if (codigoLeido.Length > 50)
-                {
-                    await DisplayAlert("Error", "Código de barras muy largo. Máximo 50 caracteres", "Aceptar");
-                    return;
-                }
-
-                contexto.Agregar(codigoLeido);
-            }
-            catch (Exception ex)
-            {
-                await DisplayAlert("Error", $"Error al procesar el código: {ex.Message}", "Aceptar");
-            }
-        });
-
-        // Retraso fuera del hilo principal para no trabar el UI
-        Task.Run(async () =>
-        {
-            await Task.Delay(1500);
-            _procesandoEscaneo = false;
-        });
+        txtCodigo.Text = string.Empty;
+        Dispatcher.Dispatch(() => txtCodigo.Focus());
     }
 
     // --- Eventos de la Interfaz Gráfica (UI) ---
@@ -133,11 +94,14 @@ public partial class AgregarCajaView : ContentPage
         {
             Dispatcher.Dispatch(() =>
             {
-                txtCodigo.IsEnabled = false;
+                // Regresamos el Entry del código a habilitado para seguir escaneando
+                txtCodigo.IsEnabled = true;
                 txtRango.IsEnabled = false;
                 txtPeso.IsEnabled = false;
                 BtnAceptar.Text = "Agregar";
                 BtnAceptar.Command = contexto.AgregarCommand;
+
+                PrepararParaSiguienteEscaneo();
             });
         }
     }
@@ -150,7 +114,7 @@ public partial class AgregarCajaView : ContentPage
     private async void Eliminar_Clicked(object sender, EventArgs e)
     {
         Dispatcher.Dispatch(() => {
-            txtCodigo.IsEnabled = false;
+            txtCodigo.IsEnabled = true;
             txtRango.IsEnabled = false;
             txtPeso.IsEnabled = false;
             BtnAceptar.Text = "Agregar";
@@ -162,6 +126,13 @@ public partial class AgregarCajaView : ContentPage
 
         bool res = await DisplayAlert("Confirmación", "¿Está seguro de eliminar este elemento?", "Confirmar", "Cancelar");
         if (res)
+        {
             contexto.Eliminar(caja_Parametro);
+            PrepararParaSiguienteEscaneo();
+        }
+        else
+        {
+            PrepararParaSiguienteEscaneo();
+        }
     }
 }
