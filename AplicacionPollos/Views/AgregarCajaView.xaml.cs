@@ -9,6 +9,10 @@ using ZXing;
 
 namespace AplicacionPollos.Views;
 
+// TO DO: generar vista de menu para escoger entre editar o eliminar un elemento seleccionado del CollectionView
+// TO DO: Acomodar la ventana de mensaje
+// TO DO: Generar vista de eliminar
+
 public partial class AgregarCajaView : ContentPage
 {
     // --- Campos Privados ---
@@ -21,6 +25,51 @@ public partial class AgregarCajaView : ContentPage
         InitializeComponent();
         BindingContext = viewModel;
         contexto = viewModel;
+        txtCodigo.HandlerChanged += TxtCodigo_HandlerChanged;
+        txtCodigo.Unfocused += TxtCodigo_Unfocused;
+    }
+
+    private void TxtCodigo_HandlerChanged(object sender, EventArgs e)
+    {
+        // Estas directivas #if aseguran que este código solo se compile en Android
+#if ANDROID
+        if (txtCodigo.Handler?.PlatformView is Android.Widget.EditText nativeEntry)
+        {
+            // A. Evitar que el teclado virtual aparezca al recibir Focus programáticamente
+            nativeEntry.ShowSoftInputOnFocus = false;
+
+            // B. Detectar el toque humano (Touch)
+            nativeEntry.Touch += (s, touchEvent) =>
+            {
+                // Cuando el usuario levanta el dedo de la pantalla (ActionUp)
+                if (touchEvent.Event.Action == Android.Views.MotionEventActions.Up)
+                {
+                    // Permitimos que se abra el teclado
+                    nativeEntry.ShowSoftInputOnFocus = true;
+
+                    // Forzamos al sistema operativo a mostrar el teclado virtual
+                    var keyboard = (Android.Views.InputMethods.InputMethodManager)nativeEntry.Context.GetSystemService(Android.Content.Context.InputMethodService);
+                    keyboard?.ShowSoftInput(nativeEntry, Android.Views.InputMethods.ShowFlags.Implicit);
+                }
+
+                // IMPORTANTE: Devolvemos false para que el clic normal del Entry siga funcionando
+                touchEvent.Handled = false;
+            };
+        }
+#endif
+    }
+
+
+    private void TxtCodigo_Unfocused(object sender, FocusEventArgs e)
+    {
+#if ANDROID
+        // C. Cuando el Entry pierde el foco (por ejemplo, después de escanear y presionar "Agregar")
+        // Volvemos a bloquear el teclado para que en el próximo escaneo no aparezca
+        if (txtCodigo.Handler?.PlatformView is Android.Widget.EditText nativeEntry)
+        {
+            nativeEntry.ShowSoftInputOnFocus = false;
+        }
+#endif
     }
 
     protected override async void OnAppearing()
@@ -37,7 +86,7 @@ public partial class AgregarCajaView : ContentPage
     private void txtCodigo_Completed(object sender, EventArgs e)
     {
         string codigoLeido = txtCodigo.Text?.Trim() ?? string.Empty;
-
+        contexto.CerrarMenu();
         if (string.IsNullOrWhiteSpace(codigoLeido))
         {
             txtCodigo.Focus();
@@ -60,79 +109,20 @@ public partial class AgregarCajaView : ContentPage
     // Método auxiliar para limpiar y re-enfocar rápido
     private void PrepararParaSiguienteEscaneo()
     {
+        
         txtCodigo.Text = string.Empty;
         Dispatcher.Dispatch(() => txtCodigo.Focus());
     }
 
-    // --- Eventos de la Interfaz Gráfica (UI) ---
-    private void SwipeView_SwipeStarted(object sender, SwipeStartedEventArgs e)
-    {
-        var swipeViewActual = sender as SwipeView;
-        if (_AbiertoActualmente != null && _AbiertoActualmente != swipeViewActual)
-        {
-            _AbiertoActualmente.Close();
-        }
-        _AbiertoActualmente = swipeViewActual;
-    }
-
-    private void SwipeItem_Clicked(object sender, EventArgs e)
-    {
-        Dispatcher.Dispatch(() =>
-        {
-            txtCodigo.IsEnabled = true;
-            txtCodigo.Focus();
-            txtRango.IsEnabled = true;
-            txtPeso.IsEnabled = true;
-            BtnAceptar.Text = "Editar";
-            BtnAceptar.Command = contexto.EditarCommand;
-        });
-    }
-
     private void BtnAceptar_Clicked(object sender, EventArgs e)
     {
-        if (BtnAceptar.Command == contexto.EditarCommand)
-        {
-            Dispatcher.Dispatch(() =>
-            {
-                // Regresamos el Entry del código a habilitado para seguir escaneando
-                txtCodigo.IsEnabled = true;
-                txtRango.IsEnabled = false;
-                txtPeso.IsEnabled = false;
-                BtnAceptar.Text = "Agregar";
-                BtnAceptar.Command = contexto.AgregarCommand;
-
-                PrepararParaSiguienteEscaneo();
-            });
-        }
+        PrepararParaSiguienteEscaneo();
     }
 
     private void Enviar_Datos_Clicked(object sender, EventArgs e)
     {
         contexto.EnviarDatos();
     }
+    
 
-    private async void Eliminar_Clicked(object sender, EventArgs e)
-    {
-        Dispatcher.Dispatch(() => {
-            txtCodigo.IsEnabled = true;
-            txtRango.IsEnabled = false;
-            txtPeso.IsEnabled = false;
-            BtnAceptar.Text = "Agregar";
-            BtnAceptar.Command = contexto.AgregarCommand;
-        });
-
-        var objSwipe = (SwipeItem)sender;
-        CajasModel caja_Parametro = (CajasModel)objSwipe.CommandParameter;
-
-        bool res = await DisplayAlert("Confirmación", "¿Está seguro de eliminar este elemento?", "Confirmar", "Cancelar");
-        if (res)
-        {
-            contexto.Eliminar(caja_Parametro);
-            PrepararParaSiguienteEscaneo();
-        }
-        else
-        {
-            PrepararParaSiguienteEscaneo();
-        }
-    }
 }

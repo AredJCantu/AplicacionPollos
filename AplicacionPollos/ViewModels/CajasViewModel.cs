@@ -43,6 +43,9 @@ namespace AplicacionPollos.ViewModels
         public event PropertyChangedEventHandler? PropertyChanged;
 
         // --- Propiedades de Estado y UI ---
+        
+        public bool Menu { get; set; }=false;
+        public bool VerEliminar { get; set; }=false;
         public bool EditarEntrys { get; set; } = false;
         public bool VistaMensaje { get; set; } = false;
         public string MensajeAlerta { get; set; } = string.Empty;
@@ -56,24 +59,74 @@ namespace AplicacionPollos.ViewModels
         public CajasModel? CajaModel { get; set; } = new();
 
         // --- Comandos (ICommand) ---
-        public ICommand AgregarCommand { get; set; }
+        public ICommand GuardarCommand { get; set; }
         public ICommand EditarCommand { get; set; }
+        public ICommand EliminarCommand { get; set; }
         public ICommand VerEditarCommand { get; set; }
         public ICommand CambiarVistaCommand { get; set; }
         public ICommand ImprimirReporteCommand { get; set; }
+        public ICommand VerEliminarCommand { get; set; }
+        public ICommand VerMenuCommand { get; set; }
+        public ICommand CerrarMenuCommand { get; set; }
         public ICommand OkCommand { get; set; }
 
         // --- Constructor ---
         public CajasViewModel()
         {
-            AgregarCommand = new RelayCommand<string>(Agregar);
+            GuardarCommand = new RelayCommand<string>(Guardar);
             EditarCommand = new RelayCommand(Editar);
+            VerEliminarCommand = new RelayCommand(VerEliminarMenu);
+            EliminarCommand =new RelayCommand<CajasModel>(Eliminar);
             CambiarVistaCommand = new RelayCommand<Vistas>(CambiarVista);
             VerEditarCommand = new RelayCommand<CajasModel>(VerEditar);
             ImprimirReporteCommand = new RelayCommand(ImprimirReporte);
             OkCommand = new RelayCommand(Ok);
-
+            VerMenuCommand = new RelayCommand(VerMenu);
+            CerrarMenuCommand = new RelayCommand(CerrarMenu);
             contexto.EliminarTodasLasCajas();
+        }
+
+        private void VerEliminarMenu()
+        {
+            VerEliminar = true;
+            Menu = false;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Menu)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(VerEliminar)));
+        }
+
+        private void Guardar(string codigo_barras)
+        {
+            // Por precaución, si el CommandParameter llega vacío, tomamos el del Binding
+            if (string.IsNullOrWhiteSpace(codigo_barras))
+            {
+                codigo_barras = CajaModel?.codigo_barras ?? "";
+            }
+
+            // Aquí usamos tu bandera para decidir qué acción tomar
+            if (EditarEntrys)
+            {
+                Editar();
+                EditarEntrys= false;
+                CajaModel = new();
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CajaModel)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(EditarEntrys)));
+            }
+            else
+            {
+                Agregar(codigo_barras);
+            }
+        }
+
+        public void CerrarMenu()
+        {
+            Menu = false;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Menu)));
+        }
+
+        private void VerMenu()
+        {
+            Menu = true;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Menu)));
         }
 
         // --- Métodos de Acción (Ejecutados por Comandos) ---
@@ -147,6 +200,7 @@ namespace AplicacionPollos.ViewModels
         {
             ListaCajas.Remove(copia);
             CajaModel = new();
+            Ok();
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CajaModel)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(contadorCajas)));
         }
@@ -208,11 +262,16 @@ namespace AplicacionPollos.ViewModels
 
         public void Ok()
         {
-            VistaMensaje = false;
-            ListaErrores.Clear();
-            MensajeAlerta = string.Empty;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(VistaMensaje)));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MensajeAlerta)));
+            if (VerEliminar) {
+                VerEliminar = false;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(VerEliminar)));
+            } else {
+                VistaMensaje = false;
+                ListaErrores.Clear();
+                MensajeAlerta = string.Empty;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(VistaMensaje)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MensajeAlerta)));
+            }
         }
 
         // --- Métodos de Navegación y Vistas ---
@@ -232,6 +291,10 @@ namespace AplicacionPollos.ViewModels
                     rango_peso = model.rango_peso
                 };
                 ListaErrores.Clear();
+                Menu= false;
+                EditarEntrys = true;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(EditarEntrys)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Menu)));
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CajaModel)));
             }
         }
@@ -283,7 +346,7 @@ namespace AplicacionPollos.ViewModels
         }
 
         // --- Lógica de Negocio (Parseo y Validaciones) ---
-        private bool ParsearCodigoDeBarras(string codigo_barras, CajasModel cajaParaLista)
+        public bool ParsearCodigoDeBarras(string codigo_barras, CajasModel cajaParaLista)
         {
             try
             {
@@ -348,6 +411,7 @@ namespace AplicacionPollos.ViewModels
 
                     default:
                         ListaErrores.Add("ERROR BCR_01: Código de barras no identificado.");
+                        Vibration.Default.Vibrate(500);
                         HabilitarEntrys();
                         return false;
                 }
@@ -355,6 +419,7 @@ namespace AplicacionPollos.ViewModels
             catch (Exception ex)
             {
                 ListaErrores.Add($"Error procesando código: {ex.Message}");
+                // -- Sonido de error --
                 ActualizarMensajeUI();
                 return false;
             }
