@@ -1,4 +1,4 @@
-﻿using AplicacionPollos.Models;
+using AplicacionPollos.Models;
 using AplicacionPollos.Repositories;
 using CommunityToolkit.Mvvm.Input;
 using Plugin.Maui.Audio;
@@ -6,17 +6,20 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Configuration;
 using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
 namespace AplicacionPollos.ViewModels
 {
-    public enum Estandares
+    public enum Estandar 
     {
         Empiezan_Por_2,
         Pilgrim,
-        Ninguno // Error
+        Ninguno
     }
 
     public enum Vistas
@@ -34,8 +37,16 @@ namespace AplicacionPollos.ViewModels
         private readonly Dictionary<string, byte> categorias = new() {
             { "1254", 3 },
             { "1255", 4 },
-            { "1256", 5 },
-            { "1257", 6 }
+            { "1256", 5},
+            { "1257", 6},
+            { "8631", 7 },
+            { "8609", 8},
+            { "8629", 9 }
+        };
+        Dictionary<int, Estandar> Estandares = new()
+        {
+            {0, Estandar.Empiezan_Por_2 },
+            {1, Estandar.Pilgrim },
         };
         private GestionadorCajas contexto = new();
 
@@ -57,11 +68,15 @@ namespace AplicacionPollos.ViewModels
         public ObservableCollection<CajasModel> ListaCajas { get; set; } = new();
         public ObservableCollection<CajasModel> ListaCajasCompleta { get; set; } = new();
         public CajasModel? CajaModel { get; set; } = new();
+        public List<string> ListaErrores { get; set; } = new();
+        public Vistas VistaActual { get; set; }
+        public List<string> Patrones { get; set; } = new() //regex
+        {
+            @"/27\d{22}A/", //no se de que empresa es, pero es el primer patrón
+            @"0{4}\d{27}"   //Pilgrim
 
-        // --- Comandos (ICommand) ---
-        public ICommand GuardarCommand { get; set; }
-        public ICommand EditarCommand { get; set; }
-        public ICommand EliminarCommand { get; set; }
+        };
+        public ICommand AgregarCommand { get; set; }
         public ICommand VerEditarCommand { get; set; }
         public ICommand CambiarVistaCommand { get; set; }
         public ICommand ImprimirReporteCommand { get; set; }
@@ -94,6 +109,24 @@ namespace AplicacionPollos.ViewModels
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(VerEliminar)));
         }
 
+        private Estandar ValidarCodigoBarras(string codigo_barras)
+        {
+            //TODO: Agregar los demás estándares
+            if (string.IsNullOrWhiteSpace(codigo_barras)) return Estandar.Ninguno;
+            foreach (var patron in Patrones) 
+            {
+                if(!Regex.IsMatch(codigo_barras, patron)) return Estandar.Ninguno;
+            }
+
+            for (int i = 0; i <= Patrones.Count; i++) 
+            {
+                if(Regex.IsMatch(codigo_barras, Patrones[i])) 
+                {
+                    return Estandares[i];
+                }
+            }
+
+            return Estandar.Ninguno;
         private void Guardar(string codigo_barras)
         {
             // Por precaución, si el CommandParameter llega vacío, tomamos el del Binding
@@ -154,7 +187,10 @@ namespace AplicacionPollos.ViewModels
                 var reproductor = AudioManager.Current.CreatePlayer(stream);
                 reproductor.Play();
             }
-            catch { }
+            catch 
+            {
+                //fakiu rango de peso
+            }
 
             CajaModel = new()
             {
@@ -352,14 +388,15 @@ namespace AplicacionPollos.ViewModels
             {
                 switch (ValidarCodigoBarras(codigo_barras))
                 {
-                    case Estandares.Empiezan_Por_2:
+                    case Estandar.Empiezan_Por_2:
+                        // Validar longitud mínima y extraer subcadenas de forma segura
                         if (!TryParseSubstring(codigo_barras, 2, 4, out var gtin) ||
                             !TryParseSubstring(codigo_barras, 6, 4, out var lote_str) ||
                             !TryParseSubstring(codigo_barras, 11, 2, out var piezas_str) ||
                             !TryParseSubstring(codigo_barras, 12, 4, out var peso_str))
                         {
-                            ListaErrores.Add("ERROR BCR_02: Formato de código inválido para estándar Empiezan_Por_2.");
-                            ActualizarMensajeUI();
+                            ListaErrores.Add("ERROR BCR_02: Formato de código inválido.");
+                            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListaErrores)));
                             return false;
                         }
 
@@ -367,8 +404,8 @@ namespace AplicacionPollos.ViewModels
                             !int.TryParse(piezas_str, out var numero_piezas) ||
                             !decimal.TryParse(peso_str, out var peso_valor))
                         {
-                            ListaErrores.Add("ERROR BCR_03: No se pudieron parsear los valores numéricos.");
-                            ActualizarMensajeUI();
+                            ListaErrores.Add("ERROR BCR_03: No se pudieron convertir los valores numéricos.");
+                            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListaErrores)));
                             return false;
                         }
 
@@ -379,14 +416,18 @@ namespace AplicacionPollos.ViewModels
                             return false;
                         }
 
-                        cajaParaLista.GTIN = gtin;
-                        cajaParaLista.numero_lote = numero_lote;
-                        cajaParaLista.numero_piezas = numero_piezas;
-                        cajaParaLista.peso = peso_valor / 1000m;
-                        cajaParaLista.rango_peso = categorias[gtin];
+                        if (VistaActual == Vistas.Agregar)
+                        {
+                            cajaParaLista.GTIN = gtin;
+                            cajaParaLista.numero_lote = numero_lote;
+                            cajaParaLista.numero_piezas = numero_piezas;
+                            cajaParaLista.peso = peso_valor / 1000m;
+                            cajaParaLista.rango_peso = categorias[gtin];
+                        }
                         break;
 
-                    case Estandares.Pilgrim:
+                    case Estandar.Pilgrim:
+                        //TODO: Identificar donde viene el número de piezas, o si es un producto estandarizado y no tiene variación en la cantidad de piezas.
                         if (!TryParseSubstring(codigo_barras, 0, 9, out var gtin_pilgrim) ||
                             !TryParseSubstring(codigo_barras, 23, 10, out var lote_pilgrim_str) ||
                             !TryParseSubstring(codigo_barras, 11, 5, out var peso_pilgrim_str))
@@ -403,13 +444,17 @@ namespace AplicacionPollos.ViewModels
                             ActualizarMensajeUI();
                             return false;
                         }
+                        if (VistaActual == Vistas.Agregar)
+                        {
+                            cajaParaLista.GTIN = gtin_pilgrim;
+                            cajaParaLista.numero_lote = numero_lote_pilgrim;
+                            cajaParaLista.peso = peso_valor_pilgrim / 100m;
+                        }
 
-                        cajaParaLista.GTIN = gtin_pilgrim;
-                        cajaParaLista.numero_lote = numero_lote_pilgrim;
-                        cajaParaLista.peso = peso_valor_pilgrim / 100m;
                         break;
 
                     default:
+                        IngresarAnomaliaCodigo();
                         ListaErrores.Add("ERROR BCR_01: Código de barras no identificado.");
                         Vibration.Default.Vibrate(500);
                         HabilitarEntrys();
@@ -427,14 +472,37 @@ namespace AplicacionPollos.ViewModels
             return true;
         }
 
-        private void HabilitarEntrys()
+        private void IngresarAnomaliaCodigo()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Eliminar(CajasModel copia)
         {
             ActualizarMensajeUI();
             EditarEntrys = true;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(EditarEntrys)));
         }
 
-        private Estandares ValidarCodigoBarras(string codigo_barras)
+        public void Editar()
+        {
+            if (CajaModel == null) return;
+            int indice = CajaModel.temp_id;
+            if(indice <= 0) return;
+            if (ListaCajas.Any(x => x.codigo_barras == CajaModel.codigo_barras && x.temp_id != CajaModel.temp_id)) return;
+            if(ParsearCodigoDeBarras(CajaModel.codigo_barras, CajaModel));
+            ListaCajas[CajaModel.temp_id - 1] = CajaModel;
+            CambiarVista(Vistas.Agregar);
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListaCajas)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CajaModel)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(VistaActual)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(contadorCajas)));
+        }
+        public void EnviarDatos()
+        {
+            contexto.AgregarCajas(ListaCajas);
+        }
+        private void CambiarVista(Vistas vista)
         {
             if (string.IsNullOrWhiteSpace(codigo_barras)) return Estandares.Ninguno;
 
