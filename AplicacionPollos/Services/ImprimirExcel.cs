@@ -20,13 +20,12 @@ namespace AplicacionPollos.Services
 
                 // Agregar encabezados
                 worksheet.Cell(1, 1).Value = "ID";
-                worksheet.Cell(1, 2).Value = "Temp ID";
-                worksheet.Cell(1, 3).Value = "Número de Lote";
-                worksheet.Cell(1, 4).Value = "GTIN";
-                worksheet.Cell(1, 5).Value = "Código de Barras";
-                worksheet.Cell(1, 6).Value = "Rango Peso";
-                worksheet.Cell(1, 7).Value = "Peso";
-                worksheet.Cell(1, 8).Value = "Número de Piezas";
+                worksheet.Cell(1, 2).Value = "Número de Lote";
+                worksheet.Cell(1, 3).Value = "GTIN";
+                worksheet.Cell(1, 4).Value = "Código de Barras";
+                worksheet.Cell(1, 5).Value = "Rango Peso";
+                worksheet.Cell(1, 6).Value = "Peso";
+                worksheet.Cell(1, 7).Value = "Número de Piezas";
 
                 // Aplicar formato a los encabezados
                 var headerRange = worksheet.Range("A1:H1");
@@ -38,14 +37,13 @@ namespace AplicacionPollos.Services
                 int row = 2;
                 foreach (var caja in Cajas)
                 {
-                    worksheet.Cell(row, 1).Value = caja.id;
-                    worksheet.Cell(row, 2).Value = caja.temp_id;
-                    worksheet.Cell(row, 3).Value = caja.numero_lote;
-                    worksheet.Cell(row, 4).Value = caja.GTIN;
-                    worksheet.Cell(row, 5).Value = caja.codigo_barras;
-                    worksheet.Cell(row, 6).Value = caja.rango_peso;
-                    worksheet.Cell(row, 7).Value = caja.peso;
-                    worksheet.Cell(row, 8).Value = caja.numero_piezas ?? 0;
+                    worksheet.Cell(row, 1).Value = caja.temp_id;
+                    worksheet.Cell(row, 2).Value = caja.numero_lote;
+                    worksheet.Cell(row, 3).Value = caja.GTIN;
+                    worksheet.Cell(row, 4).Value = caja.codigo_barras;
+                    worksheet.Cell(row, 5).Value = caja.rango_peso;
+                    worksheet.Cell(row, 6).Value = caja.peso;
+                    worksheet.Cell(row, 7).Value = caja.numero_piezas ?? 0;
                     row++;
                 }
 

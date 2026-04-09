@@ -2,207 +2,127 @@ using AplicacionPollos.Models;
 using AplicacionPollos.ViewModels;
 using Microsoft.Maui.Controls;
 using System.ComponentModel;
+using System.Linq;
+using System.Threading.Tasks;
+using System;
 using ZXing;
 
 namespace AplicacionPollos.Views;
 
+// TO DO: generar vista de menu para escoger entre editar o eliminar un elemento seleccionado del CollectionView
+// TO DO: Acomodar la ventana de mensaje
+// TO DO: Generar vista de eliminar
+
 public partial class AgregarCajaView : ContentPage
 {
-	private SwipeView _AbiertoActualmente;
-	private bool _procesandoEscaneo = false;
-	CajasViewModel contexto; 
-	public AgregarCajaView(CajasViewModel viewModel)
-	{
-		InitializeComponent();
-		BindingContext = viewModel;
-		barcodeReader.Options = new ZXing.Net.Maui.BarcodeReaderOptions
-		{
-			AutoRotate = true,
-			Multiple = true
-		};
-		contexto = viewModel;
-		contexto.PropertyChanged += OnViewModelPropertyChanged;
-	}
+    // --- Campos Privados ---
+    private SwipeView _AbiertoActualmente;
+    private CajasViewModel contexto;
 
-    protected override void OnDisappearing()
+    // --- Constructor y Ciclo de Vida ---
+    public AgregarCajaView(CajasViewModel viewModel)
     {
-        base.OnDisappearing();
-        if (contexto != null)
-            contexto.PropertyChanged -= OnViewModelPropertyChanged;
+        InitializeComponent();
+        BindingContext = viewModel;
+        contexto = viewModel;
+        txtCodigo.HandlerChanged += TxtCodigo_HandlerChanged;
+        txtCodigo.Unfocused += TxtCodigo_Unfocused;
+    }
+
+    private void TxtCodigo_HandlerChanged(object sender, EventArgs e)
+    {
+        // Estas directivas #if aseguran que este código solo se compile en Android
+#if ANDROID
+        if (txtCodigo.Handler?.PlatformView is Android.Widget.EditText nativeEntry)
+        {
+            // A. Evitar que el teclado virtual aparezca al recibir Focus programáticamente
+            nativeEntry.ShowSoftInputOnFocus = false;
+
+            // B. Detectar el toque humano (Touch)
+            nativeEntry.Touch += (s, touchEvent) =>
+            {
+                // Cuando el usuario levanta el dedo de la pantalla (ActionUp)
+                if (touchEvent.Event.Action == Android.Views.MotionEventActions.Up)
+                {
+                    // Permitimos que se abra el teclado
+                    nativeEntry.ShowSoftInputOnFocus = true;
+
+                    // Forzamos al sistema operativo a mostrar el teclado virtual
+                    var keyboard = (Android.Views.InputMethods.InputMethodManager)nativeEntry.Context.GetSystemService(Android.Content.Context.InputMethodService);
+                    keyboard?.ShowSoftInput(nativeEntry, Android.Views.InputMethods.ShowFlags.Implicit);
+                }
+
+                // IMPORTANTE: Devolvemos false para que el clic normal del Entry siga funcionando
+                touchEvent.Handled = false;
+            };
+        }
+#endif
+    }
+
+
+    private void TxtCodigo_Unfocused(object sender, FocusEventArgs e)
+    {
+#if ANDROID
+        // C. Cuando el Entry pierde el foco (por ejemplo, después de escanear y presionar "Agregar")
+        // Volvemos a bloquear el teclado para que en el próximo escaneo no aparezca
+        if (txtCodigo.Handler?.PlatformView is Android.Widget.EditText nativeEntry)
+        {
+            nativeEntry.ShowSoftInputOnFocus = false;
+        }
+#endif
     }
 
     protected override async void OnAppearing()
     {
         base.OnAppearing();
-        await RequestCameraPermission();
         await Task.Delay(100);
+        txtCodigo.IsEnabled = true;
         txtCodigo.Focus();
     }
 
-    private async void OnViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
+    // --- Gestión del Escáner Físico ---
+    // Este evento reemplaza al barcodeReader_BarcodesDetected.
+    // Se dispara cuando la terminal termina de leer el código y manda un "Enter".
+    private void txtCodigo_Completed(object sender, EventArgs e)
     {
-        if (e.PropertyName == nameof(CajasViewModel.ListaErrores) && contexto.ListaErrores.Count > 0)
+        string codigoLeido = txtCodigo.Text?.Trim() ?? string.Empty;
+        contexto.CerrarMenu();
+        if (string.IsNullOrWhiteSpace(codigoLeido))
         {
-            // Concatenar todos los errores con saltos de línea
-            string mensajeErrores = string.Join("\n", contexto.ListaErrores);
-            await DisplayAlert("Errores", mensajeErrores, "Aceptar");
+            txtCodigo.Focus();
+            return;
         }
-    }
-
-    private async Task RequestCameraPermission()
-    {
         try
         {
-            var status = await Permissions.CheckStatusAsync<Permissions.Camera>();
-            if (status != PermissionStatus.Granted)
-            {
-                status = await Permissions.RequestAsync<Permissions.Camera>();
-            }
-
-            if (status != PermissionStatus.Granted)
-            {
-                await DisplayAlert("Permisos", "Se requiere permiso de cámara para escanear códigos de barras", "Aceptar");
-            }
+            // Mandamos el código al ViewModel
+            contexto.Agregar(codigoLeido);
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Error", $"Error solicitando permiso de cámara: {ex.Message}", "Aceptar");
+            DisplayAlert("Error", $"Error al procesar el código: {ex.Message}", "Aceptar");
         }
+
+        // Automáticamente preparamos la pantalla para la siguiente caja de pollo
+        PrepararParaSiguienteEscaneo();
     }
 
-    private void barcodeReader_BarcodesDetected(object sender, ZXing.Net.Maui.BarcodeDetectionEventArgs e)
+    // Método auxiliar para limpiar y re-enfocar rápido
+    private void PrepararParaSiguienteEscaneo()
     {
-        if (_procesandoEscaneo) return;
-        var first = e.Results.FirstOrDefault();
-        if (first is null || string.IsNullOrWhiteSpace(first.Value))
-            return;
-        _procesandoEscaneo = true;
-        string codigoLeido = first.Value.Trim();
-        Dispatcher.Dispatch(async() =>
-        {
-            try
-            {
-                // Validación básica de longitud
-                if (codigoLeido.Length < 20)
-                {
-                    await DisplayAlert("Error", "Código de barras muy corto. Mínimo 20 caracteres", "Aceptar");
-                    return;
-                }
-                if (codigoLeido.Length > 50)
-                {
-                    await DisplayAlert("Error", "Código de barras muy largo. Máximo 50 caracteres", "Aceptar");
-                    return;
-                }
-                contexto.Agregar(codigoLeido);
-            }
-            catch (Exception ex) {
-                await DisplayAlert("Error", $"Error al procesar el código: {ex.Message}", "Aceptar");
-            }
-            finally
-            {
-                await Task.Delay(1500);
-                _procesandoEscaneo = false;
-            }
-        });
-
-    }
-    //Cerrar el menu swipe cuando otro este avierto
-    private void SwipeView_SwipeStarted(object sender, SwipeStartedEventArgs e)
-    {
-        var swipeViewActual = sender as SwipeView;
-        if (_AbiertoActualmente != null && _AbiertoActualmente != swipeViewActual)
-        {
-            _AbiertoActualmente.Close();
-        }
-        _AbiertoActualmente = swipeViewActual;
-    }
-    //Boton UI editar presionado
-    private void SwipeItem_Clicked(object sender, EventArgs e)
-    {
-        Dispatcher.Dispatch(() =>
-        {
-            txtCodigo.IsEnabled = true;
-            txtCodigo.Focus();
-            txtRango.IsEnabled = true;
-            txtPeso.IsEnabled = true;
-            BtnAceptar.Text = "Editar";
-            BtnAceptar.Command = contexto.EditarCommand;
-        });
+        
+        txtCodigo.Text = string.Empty;
+        Dispatcher.Dispatch(() => txtCodigo.Focus());
     }
 
     private void BtnAceptar_Clicked(object sender, EventArgs e)
     {
-        if (BtnAceptar.Command == contexto.EditarCommand)
-        {
-            Dispatcher.Dispatch(() =>
-            {
-                txtCodigo.IsEnabled = false;
-                txtRango.IsEnabled = false;
-                txtPeso.IsEnabled = false;
-                BtnAceptar.Text= "Agregar";
-                BtnAceptar.Command = contexto.AgregarCommand;
-            });
-        }
+        PrepararParaSiguienteEscaneo();
     }
 
-    //Enviar los datos a la base de datos
-    private async void Enviar_Datos_Clicked(object sender, EventArgs e)
+    private void Enviar_Datos_Clicked(object sender, EventArgs e)
     {
-        if (contexto.ListaCajas.Count == 0)
-        {
-            await DisplayAlert("Error", "No hay cajas para enviar", "Aceptar");
-            return;
-        }
         contexto.EnviarDatos();
-        if (contexto.ListaErrores.Count > 0)
-        {
-            string mensajeErrores = string.Join("\n", contexto.ListaErrores);
-            await DisplayAlert("Advertencia", $"Se guardaron algunas cajas con errores:\n{mensajeErrores}", "Aceptar");
-        }
-        else
-        {
-            await DisplayAlert("Éxito", "Datos enviados correctamente", "Aceptar");
-            contexto.ListaCajas.Clear();
-        }
-
     }
-    private async void Eliminar_Clicked(object sender, EventArgs e)
-    {
-        Dispatcher.Dispatch(() => {
-            txtCodigo.IsEnabled = false;
-            txtRango.IsEnabled = false;
-            txtPeso.IsEnabled = false;
-            BtnAceptar.Text = "Agregar";
-            BtnAceptar.Command = contexto.AgregarCommand;
-        });
-        var objSwipe = (SwipeItem)sender;
-        CajasModel caja_Parametro = (CajasModel)objSwipe.CommandParameter;
-        bool res = await DisplayAlert("Confirmacion", "¿Está seguro de eliminar este elemento?", "Confirmar", "Cancelar");
-        if (res) 
-            contexto.Eliminar(caja_Parametro);
-    }
+    
 
-    private void VerInventario(object sender, EventArgs e)
-    {
-        contexto.verInventario();
-    }
-
-    private void Juan_Clicked(object sender, EventArgs e)
-    {
-        CajasModel c = new()
-        {
-            codigo_barras = "271254486922289100162628A",
-        };
-        contexto.Agregar(c.codigo_barras);
-
-        Dispatcher.Dispatch(() =>
-        {
-            txtCodigo.IsEnabled = true;
-            txtCodigo.Focus();
-            txtRango.IsEnabled = true;
-            txtPeso.IsEnabled = true;
-            BtnAceptar.Text = "Editar";
-            BtnAceptar.Command = contexto.EditarCommand;
-        });
-    }
 }

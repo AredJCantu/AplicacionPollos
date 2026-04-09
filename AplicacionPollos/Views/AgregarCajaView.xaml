@@ -3,10 +3,12 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="AplicacionPollos.Views.AgregarCajaView"
              x:Name="AgregarVista"
-              xmlns:zxing="clr-namespace:ZXing.Net.Maui.Controls;assembly=ZXing.Net.MAUI.Controls"
              xmlns:vm="clr-namespace:AplicacionPollos.ViewModels" 
-          BackgroundColor="White" Shell.NavBarIsVisible="False" Title="Escaner"
-            >
+             xmlns:Toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             BackgroundColor="White" 
+             Shell.NavBarIsVisible="False" 
+             Title="Escaner">
+
     <ContentPage.Resources>
         <Style TargetType="Entry">
             <Setter Property="FontSize" Value="22"></Setter>
@@ -16,92 +18,114 @@
             <Setter Property="VerticalTextAlignment" Value="Center"></Setter>
         </Style>
         <Style TargetType="Label">
-            <Setter Property="FontSize" Value="22"></Setter>
+            <Setter Property="FontSize" Value="23"></Setter>
         </Style>
     </ContentPage.Resources>
-    <VerticalStackLayout>
-        <Border Margin="10,0,10,0" Stroke="Black" StrokeThickness="2">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="130" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-                
-                <ContentView HeightRequest="130" Margin="0,20,0,0" Grid.Row="0" IsClippedToBounds="True" BackgroundColor="Black">
-                    <zxing:CameraBarcodeReaderView 
-            x:Name="barcodeReader" 
-            BarcodesDetected="barcodeReader_BarcodesDetected" 
-            HorizontalOptions="Fill"
-            VerticalOptions="Fill" />
-                </ContentView>
-                <VerticalStackLayout Grid.Row="1" BackgroundColor="White" Padding="15,10">
 
-                    <Label Text="Código de barras:" TextColor="Black" />
-                    <Entry IsEnabled="False" ClearButtonVisibility="WhileEditing" x:Name="txtCodigo" Placeholder="00000000000000000000" Text="{Binding CajaModel.codigo_barras}" Keyboard="Text" TextColor="Black" PlaceholderColor="Gray" />
+    <Grid RowDefinitions="*,*,auto">
+        <VerticalStackLayout Grid.Row="0" Grid.RowSpan="4">
+            <Border Margin="10,10,10,0" Stroke="Black" StrokeThickness="2">
+                <Border.StrokeShape>
+                    <RoundRectangle  CornerRadius="10"/>
+                </Border.StrokeShape>
+                <Grid>
+                    <VerticalStackLayout Grid.Row="1" BackgroundColor="White" Padding="15,10">
+                        <Label Text="Código de barras:" TextColor="Black" />
+                        <Entry x:Name="txtCodigo" 
+       Completed="txtCodigo_Completed"
+       Text="{Binding CajaModel.codigo_barras}" 
+       Keyboard="Text" 
+       TextColor="Black" 
+       PlaceholderColor="Gray" />
 
-                    <Grid ColumnDefinitions="auto,*">
-                        <Label Grid.Column="0" Text="Rango de peso:" Margin="0,10,0,0" TextColor="Black" />
-                        <Entry IsEnabled="False" Grid.Column="1" ClearButtonVisibility="WhileEditing" x:Name="txtRango" Placeholder="0" Keyboard="Numeric" Text="{Binding CajaModel.rango_peso}" TextColor="Black" PlaceholderColor="Gray" />
-                    </Grid>
+                        <Grid IsVisible="{Binding EditarEntrys}" ColumnDefinitions="auto,*">
+                            <Label  Grid.Column="0" Text="Rango de peso:" VerticalTextAlignment="Center" TextColor="Black" />
+                            <Entry FontAttributes="Bold" Margin="5,8,0,0" Grid.Column="1" ClearButtonVisibility="WhileEditing" x:Name="txtRango" Placeholder="0" Keyboard="Numeric" Text="{Binding CajaModel.rango_peso}" TextColor="Black" PlaceholderColor="Gray" />
+                        </Grid>
 
-                    <Grid ColumnDefinitions="auto,*">
-                        <Label Grid.Column="0" Text="Peso de la caja:" Margin="0,10,0,0" TextColor="Black" />
-                        <Entry IsEnabled="False" Grid.Column="1" ClearButtonVisibility="WhileEditing" x:Name="txtPeso" Placeholder="00.00" Text="{Binding CajaModel.peso}" TextColor="Black" PlaceholderColor="Gray" />
-                    </Grid>
-                    <Button x:Name="BtnAceptar" Clicked="BtnAceptar_Clicked" Margin="0,20,0,0" Command="{Binding AgregarCommand}" CommandParameter="{Binding Source={x:Reference txtCodigo},Path=Text}" HeightRequest="50" BackgroundColor="OrangeRed" TextColor="White" Text="Agregar"></Button>
-                </VerticalStackLayout>
-            </Grid>
-        </Border>
-        <Label TextColor="Black" HorizontalOptions="Center" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" Text="{Binding contadorCajas}"></Label>
-        <Border Stroke="Black" StrokeThickness="2" Padding="5" Margin="10">
-            <CollectionView x:Name="CLWLista" SelectionMode="Single" ItemsSource="{Binding ListaCajas}">
-                <CollectionView.Resources>
-                    <Style TargetType="Label">
-                        <Setter Property="HorizontalTextAlignment" Value="Center" />
-                        <Setter Property="Margin" Value="2, 0"/>
-                        <Setter Property="FontSize" Value="25"/>
-                    </Style>
-                </CollectionView.Resources>
-                <CollectionView.Header>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Label Grid.Column="0" Text="ID" FontAttributes="Bold"></Label>
-                        <Label Grid.Column="1" Text="Lote" FontAttributes="Bold"></Label>
-                        <Label Grid.Column="2" Text="Rango" FontAttributes="Bold"></Label>
-                        <Label Grid.Column="3" Text="Peso" FontAttributes="Bold"></Label>
-                    </Grid>
-                </CollectionView.Header>
-                <CollectionView.ItemTemplate>
-                    <DataTemplate>
-                        <SwipeView SwipeStarted="SwipeView_SwipeStarted">
-                            <SwipeView.RightItems>
-                                <SwipeItems>
-                                    <SwipeItem 
-                               BackgroundColor="LightBlue" Clicked="SwipeItem_Clicked"
-                               Command="{Binding Source={x:Reference AgregarVista}, Path=BindingContext.VerEditarCommand}" 
-                               CommandParameter="{Binding .}" >
-                                        <SwipeItem.IconImageSource>
-                                            <FontImageSource FontFamily="Material" Glyph="&#xe150;" Color="White"/>
-                                        </SwipeItem.IconImageSource>
-                                    </SwipeItem>
+                        <Grid IsVisible="{Binding EditarEntrys}" ColumnDefinitions="auto,*" >
+                            <Label VerticalTextAlignment="Center" Grid.Column="0" Text="Peso de la caja:" TextColor="Black" />
+                            <Entry FontAttributes="Bold" Margin="5,8,0,0" Grid.Column="1" ClearButtonVisibility="WhileEditing" x:Name="txtPeso" Placeholder="00.00" Keyboard="Numeric" Text="{Binding CajaModel.peso}" TextColor="Black" PlaceholderColor="Gray" />
+                        </Grid>
 
-                                    <SwipeItem x:Name="Eliminar"
-                               BackgroundColor="LightPink"
-                                Clicked="Eliminar_Clicked"
-                               CommandParameter="{Binding .}" >
-                                        <SwipeItem.IconImageSource>
-                                            <FontImageSource FontFamily="Material" Glyph="&#xe872;" Color="White"/>
-                                        </SwipeItem.IconImageSource>
-                                    </SwipeItem>
-                                </SwipeItems>
-                            </SwipeView.RightItems>
+                        <Button CornerRadius="15" FontSize="16" Padding="5"  x:Name="BtnAceptar" Clicked="BtnAceptar_Clicked" Margin="0,10,0,0" Command="{Binding GuardarCommand}" CommandParameter="{Binding Source={x:Reference txtCodigo},Path=Text}" HeightRequest="50" BackgroundColor="OrangeRed" TextColor="White" Text="Agregar" >
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding EditarEntrys}" Value="True">
+                                    <Setter Property="Text" Value="Guardar Cambios" />
+                                    <Setter Property="BackgroundColor" Value="#2CB32C" />
+                                </DataTrigger>
+                            </Button.Triggers>
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroupList>
+                                    <VisualStateGroup x:Name="EstadosComunes">
+                                        <VisualState x:Name="Normal" />
+                                        <VisualState x:Name="Pressed">
+                                            <VisualState.Setters>
+                                                <Setter Property="BackgroundColor" Value="#FF6F39" />
+                                                <Setter Property="Scale" Value="0.95" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                    </VisualStateGroup>
+                                </VisualStateGroupList>
+                            </VisualStateManager.VisualStateGroups>
+                        </Button>
+                    </VerticalStackLayout>
+                </Grid>
+            </Border>
 
-                            <Grid BackgroundColor="White">
+            <Label Margin="0,10,0,0" FontAttributes="Bold" TextColor="Black" HorizontalOptions="Center" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" Text="{Binding contadorCajas}"></Label>
+
+            <Border Stroke="Black" StrokeThickness="2" Padding="5" Margin="10">
+                <Border.StrokeShape>
+                    <RoundRectangle  CornerRadius="10"/>
+                </Border.StrokeShape>
+                <CollectionView x:Name="CLWLista" SelectionMode="Single" ItemsSource="{Binding ListaCajas}">
+                    <CollectionView.Resources>
+                        <Style TargetType="Label">
+                            <Setter Property="HorizontalTextAlignment" Value="Center" />
+                            <Setter Property="Margin" Value="2, 0"/>
+                            <Setter Property="FontSize" Value="25"/>
+                        </Style>
+                    </CollectionView.Resources>
+                    <CollectionView.Header>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Label Grid.Column="0" Text="ID" FontAttributes="Bold"></Label>
+                            <Label Grid.Column="1" Text="Lote" FontAttributes="Bold"></Label>
+                            <Label Grid.Column="2" Text="Rango" FontAttributes="Bold"></Label>
+                            <Label Grid.Column="3" Text="Peso" FontAttributes="Bold"></Label>
+                        </Grid>
+                    </CollectionView.Header>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <Grid.Behaviors>
+                                    <Toolkit:TouchBehavior LongPressCommand="{Binding BindingContext.VerMenuCommand,Source={x:Reference CLWLista}}" />
+                                </Grid.Behaviors>
+                                <VisualStateManager.VisualStateGroups>
+                                    <VisualStateGroupList>
+                                        <VisualStateGroup x:Name="CommonStates">
+
+                                            <VisualState x:Name="Normal">
+                                                <VisualState.Setters>
+                                                    <Setter Property="BackgroundColor" Value="Transparent" />
+                                                </VisualState.Setters>
+                                            </VisualState>
+
+                                            <VisualState x:Name="Selected">
+                                                <VisualState.Setters>
+                                                    <Setter Property="BackgroundColor" Value="#FF8E64" />
+                                                </VisualState.Setters>
+                                            </VisualState>
+
+                                        </VisualStateGroup>
+                                    </VisualStateGroupList>
+                                </VisualStateManager.VisualStateGroups>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="*"/>
@@ -113,13 +137,85 @@
                                 <Label Grid.Column="2" Text="{Binding rango_peso}"/>
                                 <Label Grid.Column="3" Text="{Binding peso}"/>
                             </Grid>
-                        </SwipeView>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </Border>
+
+            <Button CornerRadius="15" FontSize="16" Margin="10" x:Name="Enviar_Datos" Clicked="Enviar_Datos_Clicked" Text="Enviar datos" HeightRequest="50" BackgroundColor="OrangeRed" TextColor="White">
+                <VisualStateManager.VisualStateGroups>
+                    <VisualStateGroupList>
+                        <VisualStateGroup x:Name="EstadosComunes">
+                            <VisualState x:Name="Normal" />
+                            <VisualState x:Name="Pressed">
+                                <VisualState.Setters>
+                                    <Setter Property="BackgroundColor" Value="#FF6F39" />
+                                    <Setter Property="Scale" Value="0.95" />
+                                </VisualState.Setters>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateGroupList>
+                </VisualStateManager.VisualStateGroups>
+            </Button>
+            <Button CornerRadius="15" FontSize="16" Margin="10" x:Name="Imprimir" Command="{Binding ImprimirReporteCommand}" Text="Imprimir" HeightRequest="50" BackgroundColor="OrangeRed" TextColor="White">
+                <VisualStateManager.VisualStateGroups>
+                    <VisualStateGroupList>
+                        <VisualStateGroup x:Name="EstadosComunes">
+                            <VisualState x:Name="Normal" />
+                            <VisualState x:Name="Pressed">
+                                <VisualState.Setters>
+                                    <Setter Property="BackgroundColor" Value="#FF6F39" />
+                                    <Setter Property="Scale" Value="0.95" />
+                                </VisualState.Setters>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateGroupList>
+                </VisualStateManager.VisualStateGroups>
+            </Button>
+        </VerticalStackLayout>
+        <!--Elemento que pone gris la pantalla para que cierre el menu-->
+        <BoxView Grid.Row="0" Grid.RowSpan="3" 
+                 BackgroundColor="#80000000" 
+                 IsVisible="{Binding Menu}">
+            <BoxView.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding CerrarMenuCommand}" />
+            </BoxView.GestureRecognizers>
+        </BoxView>
+        <Border IsVisible="{Binding Menu}" Grid.Row="2" Margin="10,0" BackgroundColor="#FFFFFF" x:Name="Menu" Stroke="Black" StrokeThickness="3">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="15,15,0,0"></RoundRectangle>
+            </Border.StrokeShape>
+            <Grid RowDefinitions="*,*" Padding="4">
+                <Grid.Resources>
+                    <Style TargetType="Button">
+                        <Setter Property="Margin" Value="8"></Setter>
+                    </Style>
+                </Grid.Resources>
+                <Button Command="{Binding VerEditarCommand}" CommandParameter="{Binding Source={x:Reference CLWLista},Path=SelectedItem}" BackgroundColor="#6BE400" ContentLayout="left,10" FontSize="18" TextTransform="Uppercase" Grid.Row="0" Text="Editar"></Button>
+                <Button BackgroundColor="#C63600" FontSize="18" TextTransform="Uppercase" Grid.Row="1" Command="{Binding VerEliminarCommand}" Text="Eliminar"></Button>
+            </Grid>
         </Border>
-        <Button Margin="10" x:Name="Enviar_Datos" Clicked="Enviar_Datos_Clicked" Text="Enviar datos" HeightRequest="50" BackgroundColor="OrangeRed" TextColor="White"></Button>
-        <Button Margin="10" x:Name="BtnVerInventario" Clicked="VerInventario" Text="Ver cajas" HeightRequest="50" BackgroundColor="OrangeRed" TextColor="White"></Button>
-        <Button Text="BOTON DE JUAN, NO DE LA UI/UX" x:Name="Juan" Clicked="Juan_Clicked"></Button>
-    </VerticalStackLayout>
+        <Border Grid.Row="1" HeightRequest="140" Margin="10,0" BackgroundColor="LightGray" x:Name="MensajeWindow" IsVisible="{Binding VistaMensaje}" Stroke="Black" StrokeThickness="4">
+            <Grid RowDefinitions="*,auto" Margin="5,0,5,10">
+                <Label Grid.Row="0" x:Name="lblMensaje" Text="{Binding MensajeAlerta}" FontSize="20" HorizontalTextAlignment="Center" VerticalTextAlignment="Center"></Label>
+                <HorizontalStackLayout Grid.Row="1" HorizontalOptions="Center">
+                    <Button Text="Aceptar"  BackgroundColor="LightGreen" FontSize="20" Command="{Binding OkCommand}"></Button>
+                </HorizontalStackLayout>
+            </Grid>
+        </Border>
+        <!-- Elemento para cerrar menu de eliminar -->
+        <BoxView Grid.Row="0" Grid.RowSpan="3" 
+         BackgroundColor="#80000000" 
+         IsVisible="{Binding VerEliminar}">
+        </BoxView>
+        <Border Grid.Row="1" IsVisible="{Binding VerEliminar}" HeightRequest="140" Margin="10,0" BackgroundColor="LightGray"  Stroke="Black" StrokeThickness="4">
+            <Grid RowDefinitions="*,auto" Margin="5,0,5,10">
+                <Label Grid.Row="0" Text="Esta seguro de eliminar este registro?" FontSize="20" HorizontalTextAlignment="Center" VerticalTextAlignment="Center"></Label>
+                <HorizontalStackLayout Grid.Row="1" HorizontalOptions="Center">
+                    <Button Margin="0,0,20,0" x:Name="ConfirmarEliminarButton" Text="Eliminar" Command="{Binding EliminarCommand}" CommandParameter="{Binding Source={x:Reference CLWLista},Path=SelectedItem}" BackgroundColor="#9B2A00" FontSize="20"></Button>
+                    <Button Text="Cancelar" BackgroundColor="#2CB32C" FontSize="20" Command="{Binding OkCommand}"></Button>
+                </HorizontalStackLayout>
+            </Grid>
+        </Border>
+    </Grid>
 </ContentPage>

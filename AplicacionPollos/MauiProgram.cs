@@ -1,5 +1,6 @@
 ﻿using AplicacionPollos.ViewModels;
 using AplicacionPollos.Views;
+using CommunityToolkit.Maui;
 using Microsoft.Extensions.Logging;
 using Plugin.Maui.Audio;
 using ZXing.Net.Maui.Controls;
@@ -12,6 +13,7 @@ namespace AplicacionPollos
             var builder = MauiApp.CreateBuilder();
             builder
                 .UseMauiApp<App>()
+                .UseMauiCommunityToolkit()
                 .UseBarcodeReader()
                 .AddAudio()
                 .ConfigureFonts(fonts =>
@@ -26,7 +28,6 @@ namespace AplicacionPollos
 
             // Registrar las Views
             builder.Services.AddTransient<AgregarCajaView>();
-            builder.Services.AddTransient<InventarioView>();
 
 #if DEBUG
             builder.Logging.AddDebug();
