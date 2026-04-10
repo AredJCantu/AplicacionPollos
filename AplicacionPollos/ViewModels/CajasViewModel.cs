@@ -19,15 +19,6 @@ namespace AplicacionPollos.ViewModels
         Pilgrim,
         Ninguno
     }
-    public enum Vistas
-    {
-        Agregar,
-        Editar,
-        Eliminar,
-        Principal,
-        Dialogo
-    }
-
     public class CajasViewModel : INotifyPropertyChanged
     {
         // --- Campos Privados ---
@@ -37,8 +28,9 @@ namespace AplicacionPollos.ViewModels
             { "1256", 5},
             { "1257", 6},
             { "8631", 0 },
-            { "8609", 0},
-            { "8629", 0 }
+            { "8609", 0 },
+            { "8629", 0 },
+            { "40372",10 }
         };
         Dictionary<int, Estandar> Estandares = new()
         {
@@ -51,13 +43,13 @@ namespace AplicacionPollos.ViewModels
         public event PropertyChangedEventHandler? PropertyChanged;
 
         // --- Propiedades de Estado y UI ---
-        
+        public bool fondoHabilitado { get; set; }=true;
+        public bool EsAnomalia { get; set; } = false;
         public bool Menu { get; set; }=false;
         public bool VerEliminar { get; set; }=false;
         public bool EditarEntrys { get; set; } = false;
         public bool VistaMensaje { get; set; } = false;
         public string MensajeAlerta { get; set; } = string.Empty;
-        public Vistas VistaActual { get; set; }
         public string contadorCajas => "Cajas: " + ListaCajas.Count;
 
         // --- Colecciones y Modelos ---
@@ -65,11 +57,11 @@ namespace AplicacionPollos.ViewModels
         public ObservableCollection<CajasModel> ListaCajas { get; set; } = new();
         public ObservableCollection<CajasModel> ListaCajasCompleta { get; set; } = new();
         public CajasModel? CajaModel { get; set; } = new();
+        public CajasModel? CajaAnomalia { get; set; }
         public List<string> Patrones { get; set; } = new() //regex
         {
             @"^27(\d{4})(\d{4})\d{2}(\d{5})\d{7}A$", //no se de que empresa es, pero es el primer patrón
             @"^0{4}(\d{5})\d{2}(\d{5})\d{15}"        //Pilgrim
-
         };
 
         // --- Comandos (ICommand) ---
@@ -83,6 +75,8 @@ namespace AplicacionPollos.ViewModels
         public ICommand VerMenuCommand { get; set; }
         public ICommand CerrarMenuCommand { get; set; }
         public ICommand OkCommand { get; set; }
+        public ICommand VerAgregarManualCommand { get; set; }
+        public ICommand VolverCommand { get; set; }
 
         // --- Constructor ---
         public CajasViewModel()
@@ -91,19 +85,40 @@ namespace AplicacionPollos.ViewModels
             EditarCommand = new RelayCommand(Editar);
             VerEliminarCommand = new RelayCommand(VerEliminarMenu);
             EliminarCommand =new RelayCommand<CajasModel>(Eliminar);
-            CambiarVistaCommand = new RelayCommand<Vistas>(CambiarVista);
             VerEditarCommand = new RelayCommand<CajasModel>(VerEditar);
             ImprimirReporteCommand = new RelayCommand(ImprimirReporte);
             OkCommand = new RelayCommand(Ok);
             VerMenuCommand = new RelayCommand(VerMenu);
             CerrarMenuCommand = new RelayCommand(CerrarMenu);
+            VerAgregarManualCommand = new RelayCommand(VerAgregarManual);
+            VolverCommand=new RelayCommand(Volver);
             contexto.EliminarTodasLasCajas();
+        }
+
+        private void Volver()
+        {
+            EsAnomalia = false;
+            fondoHabilitado = true;
+            CajaModel = new();
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
+        }
+
+        private void VerAgregarManual()
+        {
+            EsAnomalia= true;
+            fondoHabilitado = false;
+            Ok();
+            CajaAnomalia = new();
+            CajaAnomalia.codigo_barras = CajaModel.codigo_barras;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
         }
 
         private void VerEliminarMenu()
         {
             VerEliminar = true;
             Menu = false;
+            fondoHabilitado = false;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(fondoHabilitado)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Menu)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(VerEliminar)));
         }
@@ -126,18 +141,24 @@ namespace AplicacionPollos.ViewModels
             else
             {
                 Agregar(codigo_barras);
+                if(EsAnomalia)
+                    AgregarAnomalia();
             }
         }
 
         public void CerrarMenu()
         {
             Menu = false;
+            fondoHabilitado = true;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(fondoHabilitado)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Menu)));
         }
 
         private void VerMenu()
         {
             Menu = true;
+            fondoHabilitado = false;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(fondoHabilitado)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Menu)));
         }
 
@@ -146,31 +167,53 @@ namespace AplicacionPollos.ViewModels
         {
             if (string.IsNullOrWhiteSpace(codigo_barras) || ListaCajas.Any(x => x.codigo_barras == codigo_barras))
                 return;
-
             CajasModel cajaParaLista = new();
             int temp_id = ListaCajas.LastOrDefault() == null ? 1 : ListaCajas.LastOrDefault().temp_id + 1;
             cajaParaLista.temp_id = temp_id;
             cajaParaLista.codigo_barras = codigo_barras;
+            if (EsAnomalia) {
+                cajaParaLista.GTIN=CajaAnomalia.GTIN;
+                cajaParaLista.numero_lote=CajaAnomalia.numero_lote;
+                cajaParaLista.numero_piezas=CajaAnomalia.numero_piezas;
+                cajaParaLista.peso=CajaAnomalia.peso;
+                cajaParaLista.rango_peso=CajaAnomalia.rango_peso;
+                ListaCajas.Add(cajaParaLista);
+                EditarEntrys = false;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(EditarEntrys)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(contadorCajas)));
+                try
+                {
+                    var stream = await FileSystem.OpenAppPackageFileAsync("beep.mp3");
+                    var reproductor = AudioManager.Current.CreatePlayer(stream);
+                    reproductor.Play();
+                }
+                catch
+                {
+                    //fakiu rango de peso
+                }
+                EsAnomalia= false;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(EsAnomalia)));
+            } else {
 
-            bool parseoExitoso = ParsearCodigoDeBarras(codigo_barras, cajaParaLista);
-            if (!parseoExitoso) return;
+                bool parseoExitoso = ParsearCodigoDeBarras(codigo_barras, cajaParaLista);
+                if (!parseoExitoso) return;
 
-            ListaCajas.Add(cajaParaLista);
-            EditarEntrys = false;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(EditarEntrys)));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(contadorCajas)));
+                ListaCajas.Add(cajaParaLista);
+                EditarEntrys = false;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(EditarEntrys)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(contadorCajas)));
 
-            try
-            {
-                var stream = await FileSystem.OpenAppPackageFileAsync("beep.mp3");
-                var reproductor = AudioManager.Current.CreatePlayer(stream);
-                reproductor.Play();
+                try
+                {
+                    var stream = await FileSystem.OpenAppPackageFileAsync("beep.mp3");
+                    var reproductor = AudioManager.Current.CreatePlayer(stream);
+                    reproductor.Play();
+                }
+                catch
+                {
+                    //fakiu rango de peso
+                }
             }
-            catch
-            {
-                //fakiu rango de peso
-            }
-
             CajaModel = new()
             {
                 temp_id = cajaParaLista.temp_id,
@@ -203,16 +246,16 @@ namespace AplicacionPollos.ViewModels
             }
 
             ListaCajas[indice - 1] = CajaModel;
-            CambiarVista(Vistas.Agregar);
 
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListaCajas)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CajaModel)));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(VistaActual)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(contadorCajas)));
         }
 
         public void Eliminar(CajasModel copia)
         {
+            EditarEntrys = false;
+            PropertyChanged?.Invoke(this,new PropertyChangedEventArgs(nameof(EditarEntrys)));
             ListaCajas.Remove(copia);
             CajaModel = new();
             Ok();
@@ -280,18 +323,24 @@ namespace AplicacionPollos.ViewModels
             if (VerEliminar) {
                 VerEliminar = false;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(VerEliminar)));
+                fondoHabilitado = true;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(fondoHabilitado)));
             } else {
                 VistaMensaje = false;
                 ListaErrores.Clear();
                 MensajeAlerta = string.Empty;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(VistaMensaje)));
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MensajeAlerta)));
+                fondoHabilitado = true;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(fondoHabilitado)));
             }
         }
 
         // --- Métodos de Navegación y Vistas ---
         private void VerEditar(CajasModel? model)
         {
+            fondoHabilitado = true;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(fondoHabilitado)));
             if (model != null)
             {
                 CajaModel = new CajasModel
@@ -314,58 +363,14 @@ namespace AplicacionPollos.ViewModels
             }
         }
 
-        private void CambiarVista(Vistas vista)
-        {
-            switch (vista)
-            {
-                case Vistas.Agregar:
-                    VistaActual = Vistas.Agregar;
-                    Shell.Current.GoToAsync("//Agregar_Caja");
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(VistaActual)));
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CajaModel)));
-                    break;
-                case Vistas.Eliminar:
-                    if (CajaModel == null)
-                    {
-                        ListaErrores.Add("Seleccione una caja para eliminar.");
-                        ActualizarMensajeUI();
-                        return;
-                    }
-                    VistaActual = Vistas.Eliminar;
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(VistaActual)));
-                    break;
-                case Vistas.Editar:
-                    if (CajaModel == null)
-                    {
-                        ListaErrores.Add("Seleccione una caja para modificar la información.");
-                        ActualizarMensajeUI();
-                        return;
-                    }
-                    CajasModel clon = new()
-                    {
-                        id = CajaModel.id,
-                        GTIN = CajaModel.GTIN,
-                        peso = CajaModel.peso,
-                        numero_lote = CajaModel.numero_lote,
-                        numero_piezas = CajaModel.numero_piezas,
-                        codigo_barras = CajaModel.codigo_barras
-                    };
-                    CajaModel = clon;
-                    Shell.Current.GoToAsync("//Editar_Caja");
-                    VistaActual = Vistas.Editar;
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(VistaActual)));
-                    break;
-            }
-            ListaErrores.Clear();
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListaErrores)));
-        }
+        
 
         // --- Lógica de Negocio (Parseo y Validaciones) ---
         public bool ParsearCodigoDeBarras(string codigo_barras, CajasModel cajaParaLista)
         {
             try
             {
-                switch (ValidarCodigoBarras(codigo_barras))
+                 switch (ValidarCodigoBarras(codigo_barras))
                 {
                     case Estandar.Empiezan_Por_2:
                         // Validar longitud mínima y extraer subcadenas de forma segura
@@ -394,8 +399,8 @@ namespace AplicacionPollos.ViewModels
                             ActualizarMensajeUI();
                             return false;
                         }
-
-                        if (VistaActual == Vistas.Agregar)
+                        //Esta agregando
+                        if (EditarEntrys==false)
                         {
                             cajaParaLista.GTIN = gtin;
                             cajaParaLista.numero_lote = numero_lote;
@@ -423,7 +428,8 @@ namespace AplicacionPollos.ViewModels
                             ActualizarMensajeUI();
                             return false;
                         }
-                        if (VistaActual == Vistas.Agregar)
+                        //Esta agregando
+                        if (EditarEntrys==false)
                         {
                             cajaParaLista.GTIN = gtin_pilgrim;
                             cajaParaLista.numero_lote = numero_lote_pilgrim;
@@ -433,9 +439,9 @@ namespace AplicacionPollos.ViewModels
                         break;
 
                     default:
-                        IngresarAnomaliaCodigo();
                         ListaErrores.Add("ERROR BCR_01: Código de barras no identificado.");
-                        Vibration.Default.Vibrate(500);
+                        ActualizarMensajeUI();
+                        Vibration.Default.Vibrate(1000);
                         HabilitarEntrys();
                         return false;
                 }
@@ -450,9 +456,9 @@ namespace AplicacionPollos.ViewModels
 
             return true;
         }
-        private void IngresarAnomaliaCodigo()
+        private void AgregarAnomalia()
         {
-            throw new NotImplementedException();
+            //Usar la api para enviar los datos a la base de datos de Mysql
         }
         private void HabilitarEntrys()
         {
@@ -494,12 +500,24 @@ namespace AplicacionPollos.ViewModels
             }
         }
 
-        private void ActualizarMensajeUI()
+        private async void ActualizarMensajeUI()
         {
+            try
+            {
+                var stream = await FileSystem.OpenAppPackageFileAsync("Error.mp3");
+                var reproductor = AudioManager.Current.CreatePlayer(stream);
+                reproductor.Play();
+                Vibration.Default.Vibrate(1000);
+            }
+            catch
+            {
+            }
             MensajeAlerta = string.Join("\n", ListaErrores);
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MensajeAlerta)));
             VistaMensaje = true;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(VistaMensaje)));
+            fondoHabilitado = false;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(fondoHabilitado)));
         }
     }
 }

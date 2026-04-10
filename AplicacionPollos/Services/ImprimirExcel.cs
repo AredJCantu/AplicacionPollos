@@ -28,7 +28,7 @@ namespace AplicacionPollos.Services
                 worksheet.Cell(1, 7).Value = "Número de Piezas";
 
                 // Aplicar formato a los encabezados
-                var headerRange = worksheet.Range("A1:H1");
+                var headerRange = worksheet.Range("A1:G1");
                 headerRange.Style.Font.Bold = true;
                 headerRange.Style.Fill.BackgroundColor = XLColor.LightBlue;
                 headerRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;

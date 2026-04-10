@@ -1,10 +1,9 @@
-﻿using SQLite;
+﻿
 
 namespace AplicacionPollos.Models
 {
     public partial class CajasModel
     {
-        [PrimaryKey, AutoIncrement]
         public int id { get; set; }
         public int temp_id { get; set; } //Para identificarlos en la lista
         public int numero_lote { get; set; }

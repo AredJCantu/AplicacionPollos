@@ -22,8 +22,9 @@
         </Style>
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="*,*,auto">
-        <VerticalStackLayout Grid.Row="0" Grid.RowSpan="4">
+    <Grid RowDefinitions="auto,*,auto" >
+        <VerticalStackLayout Grid.Row="0" Grid.RowSpan="4" IsEnabled="{Binding fondoHabilitado}">
+            
             <Border Margin="10,10,10,0" Stroke="Black" StrokeThickness="2">
                 <Border.StrokeShape>
                     <RoundRectangle  CornerRadius="10"/>
@@ -84,7 +85,7 @@
                         <Style TargetType="Label">
                             <Setter Property="HorizontalTextAlignment" Value="Center" />
                             <Setter Property="Margin" Value="2, 0"/>
-                            <Setter Property="FontSize" Value="25"/>
+                            <Setter Property="FontSize" Value="22"/>
                         </Style>
                     </CollectionView.Resources>
                     <CollectionView.Header>
@@ -195,11 +196,17 @@
                 <Button BackgroundColor="#C63600" FontSize="18" TextTransform="Uppercase" Grid.Row="1" Command="{Binding VerEliminarCommand}" Text="Eliminar"></Button>
             </Grid>
         </Border>
+        <!--borde para para el fondo-->
+        <BoxView Grid.Row="0" Grid.RowSpan="3" 
+            BackgroundColor="#80000000" 
+            IsVisible="{Binding VistaMensaje}">
+        </BoxView>
         <Border Grid.Row="1" HeightRequest="140" Margin="10,0" BackgroundColor="LightGray" x:Name="MensajeWindow" IsVisible="{Binding VistaMensaje}" Stroke="Black" StrokeThickness="4">
             <Grid RowDefinitions="*,auto" Margin="5,0,5,10">
                 <Label Grid.Row="0" x:Name="lblMensaje" Text="{Binding MensajeAlerta}" FontSize="20" HorizontalTextAlignment="Center" VerticalTextAlignment="Center"></Label>
-                <HorizontalStackLayout Grid.Row="1" HorizontalOptions="Center">
-                    <Button Text="Aceptar"  BackgroundColor="LightGreen" FontSize="20" Command="{Binding OkCommand}"></Button>
+                <HorizontalStackLayout Grid.Row="1"  HorizontalOptions="Center">
+                    <Button Text="Registro manual" x:Name="RegistroManualbtn" Clicked="RegistroManualbtn_Clicked" Margin="0,0,10,0" BackgroundColor="OrangeRed" FontSize="20" Command="{Binding VerAgregarManualCommand}"></Button>
+                    <Button Text="Aceptar"  BackgroundColor="LightGreen" FontSize="20" Clicked="Button_Clicked" Command="{Binding OkCommand}"></Button>
                 </HorizontalStackLayout>
             </Grid>
         </Border>
@@ -215,6 +222,75 @@
                     <Button Margin="0,0,20,0" x:Name="ConfirmarEliminarButton" Text="Eliminar" Command="{Binding EliminarCommand}" CommandParameter="{Binding Source={x:Reference CLWLista},Path=SelectedItem}" BackgroundColor="#9B2A00" FontSize="20"></Button>
                     <Button Text="Cancelar" BackgroundColor="#2CB32C" FontSize="20" Command="{Binding OkCommand}"></Button>
                 </HorizontalStackLayout>
+            </Grid>
+        </Border>
+        <!--Codigo anomalo-->
+        <BoxView Grid.Row="0" Grid.RowSpan="3" 
+    BackgroundColor="#80000000" 
+    IsVisible="{Binding EsAnomalia}">
+        </BoxView>
+
+        <Border IsVisible="{Binding EsAnomalia}" Grid.Row="0" HeightRequest="450" Margin="10,10,10,0" Stroke="DarkSlateGrey" StrokeThickness="4">
+            <Border.StrokeShape>
+                <RoundRectangle  CornerRadius="10"/>
+            </Border.StrokeShape>
+            <Grid>
+                <VerticalStackLayout Grid.Row="1" BackgroundColor="White" Padding="20">
+                    <Label Text="Código de barras:" TextColor="Black" />
+                    <Entry x:Name="txtCodigo_2" 
+                    Text="{Binding CajaAnomalia.codigo_barras}" 
+                    Keyboard="Text" 
+                    TextColor="Black" 
+                    PlaceholderColor="Gray" />
+                    <Grid ColumnDefinitions="auto,*">
+                        <Label  Grid.Column="0" Text="Lote:" VerticalTextAlignment="Center" TextColor="Black" />
+                        <Entry FontAttributes="Bold" Margin="5,8,0,0" Grid.Column="1" ClearButtonVisibility="WhileEditing"  Placeholder="0" Keyboard="Numeric" Text="{Binding CajaAnomalia.numero_lote}" TextColor="Black" PlaceholderColor="Gray" />
+                    </Grid>
+                    <Grid ColumnDefinitions="auto,*">
+                        <Label  Grid.Column="0" Text="Numero de piezas:" VerticalTextAlignment="Center" TextColor="Black" />
+                        <Entry FontAttributes="Bold" Margin="5,8,0,0" Grid.Column="1" ClearButtonVisibility="WhileEditing"  Placeholder="0" Keyboard="Numeric" Text="{Binding CajaAnomalia.numero_lote}" TextColor="Black" PlaceholderColor="Gray" />
+                    </Grid>
+                    <Grid ColumnDefinitions="auto,*">
+                        <Label  Grid.Column="0" Text="Rango de peso:" VerticalTextAlignment="Center" TextColor="Black" />
+                        <Entry FontAttributes="Bold" Margin="5,8,0,0" Grid.Column="1" ClearButtonVisibility="WhileEditing"  Placeholder="0" Keyboard="Numeric" Text="{Binding CajaAnomalia.rango_peso}" TextColor="Black" PlaceholderColor="Gray" />
+                    </Grid>
+
+                    <Grid ColumnDefinitions="auto,*" >
+                        <Label VerticalTextAlignment="Center" Grid.Column="0" Text="Peso de la caja:" TextColor="Black" />
+                        <Entry FontAttributes="Bold" Margin="5,8,0,0" Grid.Column="1" ClearButtonVisibility="WhileEditing"  Placeholder="00.00" Keyboard="Numeric" Text="{Binding CajaAnomalia.peso}" TextColor="Black" PlaceholderColor="Gray" />
+                    </Grid>
+
+                    <Button CornerRadius="15" FontSize="16" Padding="5" x:Name="GuardarManual" Clicked="GuardarManual_Clicked" Margin="0,10,0,0" Command="{Binding GuardarCommand}" CommandParameter="{Binding Source={x:Reference txtCodigo_2},Path=Text}" HeightRequest="50" BackgroundColor="OrangeRed" TextColor="White" Text="Agregar manualmente" >
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroupList>
+                                <VisualStateGroup x:Name="EstadosComunes">
+                                    <VisualState x:Name="Normal" />
+                                    <VisualState x:Name="Pressed">
+                                        <VisualState.Setters>
+                                            <Setter Property="BackgroundColor" Value="#FF6F39" />
+                                            <Setter Property="Scale" Value="0.95" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                </VisualStateGroup>
+                            </VisualStateGroupList>
+                        </VisualStateManager.VisualStateGroups>
+                    </Button>
+                    <Button CornerRadius="15" FontSize="16" Padding="5"  Margin="0,10,0,0" Command="{Binding VolverCommand}" HeightRequest="50" BackgroundColor="#408E2F" TextColor="White" Text="Regresar" >
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroupList>
+                                <VisualStateGroup x:Name="EstadosComunes">
+                                    <VisualState x:Name="Normal" />
+                                    <VisualState x:Name="Pressed">
+                                        <VisualState.Setters>
+                                            <Setter Property="BackgroundColor" Value="#68B159" />
+                                            <Setter Property="Scale" Value="0.95" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                </VisualStateGroup>
+                            </VisualStateGroupList>
+                        </VisualStateManager.VisualStateGroups>
+                    </Button>
+                </VerticalStackLayout>
             </Grid>
         </Border>
     </Grid>

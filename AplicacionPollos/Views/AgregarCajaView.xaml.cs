@@ -28,7 +28,7 @@ public partial class AgregarCajaView : ContentPage
         txtCodigo.HandlerChanged += TxtCodigo_HandlerChanged;
         txtCodigo.Unfocused += TxtCodigo_Unfocused;
     }
-
+    
     private void TxtCodigo_HandlerChanged(object sender, EventArgs e)
     {
         // Estas directivas #if aseguran que este código solo se compile en Android
@@ -85,25 +85,28 @@ public partial class AgregarCajaView : ContentPage
     // Se dispara cuando la terminal termina de leer el código y manda un "Enter".
     private void txtCodigo_Completed(object sender, EventArgs e)
     {
-        string codigoLeido = txtCodigo.Text?.Trim() ?? string.Empty;
-        contexto.CerrarMenu();
-        if (string.IsNullOrWhiteSpace(codigoLeido))
+        if (contexto.EditarEntrys == false)
         {
-            txtCodigo.Focus();
-            return;
-        }
-        try
-        {
-            // Mandamos el código al ViewModel
-            contexto.Agregar(codigoLeido);
-        }
-        catch (Exception ex)
-        {
-            DisplayAlert("Error", $"Error al procesar el código: {ex.Message}", "Aceptar");
-        }
+            string codigoLeido = txtCodigo.Text?.Trim() ?? string.Empty;
+            contexto.CerrarMenu();
+            if (string.IsNullOrWhiteSpace(codigoLeido))
+            {
+                txtCodigo.Focus();
+                return;
+            }
+            try
+            {
+                // Mandamos el código al ViewModel
+                contexto.Agregar(codigoLeido);
+            }
+            catch (Exception ex)
+            {
+                DisplayAlert("Error", $"Error al procesar el código: {ex.Message}", "Aceptar");
+            }
 
-        // Automáticamente preparamos la pantalla para la siguiente caja de pollo
-        PrepararParaSiguienteEscaneo();
+            // Automáticamente preparamos la pantalla para la siguiente caja de pollo
+            PrepararParaSiguienteEscaneo();
+        }
     }
 
     // Método auxiliar para limpiar y re-enfocar rápido
@@ -123,6 +126,20 @@ public partial class AgregarCajaView : ContentPage
     {
         contexto.EnviarDatos();
     }
-    
+    //aceptar clicket
+    private void Button_Clicked(object sender, EventArgs e)
+    {
+        PrepararParaSiguienteEscaneo();
+    }
 
+    private void RegistroManualbtn_Clicked(object sender, EventArgs e)
+    {
+        txtCodigo_2.Text=string.Empty;
+        Dispatcher.Dispatch(() => txtCodigo_2.Focus());
+    }
+
+    private void GuardarManual_Clicked(object sender, EventArgs e)
+    {
+        PrepararParaSiguienteEscaneo();
+    }
 }

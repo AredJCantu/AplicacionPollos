@@ -1,10 +1,8 @@
 ﻿using AplicacionPollos.Models;
 using AplicacionPollos.Services;
-using SQLite;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace AplicacionPollos.Repositories
@@ -12,17 +10,20 @@ namespace AplicacionPollos.Repositories
     public class GestionadorCajas
     {
         ImprimirExcel excel = new();
-        SQLiteConnection context;
+
+        // Reemplazamos SQLite con una lista en memoria y un contador de IDs
+        private List<CajasModel> _cajas;
+        private int _siguienteId;
+
         public List<string> Errores;
 
         public GestionadorCajas()
         {
-            string ruta = FileSystem.AppDataDirectory + "/cajas.db3";
-            context = new SQLiteConnection(ruta);
-            context.CreateTable<CajasModel>();
+            _cajas = new List<CajasModel>();
+            _siguienteId = 1; // Inicializamos el ID simulando el Autoincrement
         }
 
-        //Create
+        // --- Create ---
 
         public bool AgregarCaja(CajasModel caja)
         {
@@ -40,7 +41,7 @@ namespace AplicacionPollos.Repositories
             {
                 Errores.Add("El número de lote es obligatorio.");
             }
-            if (caja.rango_peso <= 0)
+            if (caja.rango_peso < 0)
             {
                 Errores.Add("El rango de peso es obligatorio.");
             }
@@ -49,13 +50,18 @@ namespace AplicacionPollos.Repositories
                 return false;
             }
 
-            context.Insert(caja);
+            // Simulamos la inserción y el auto-incremento del ID
+            caja.id = _siguienteId++;
+            _cajas.Add(caja);
+
             return true;
         }
+
         public void AgregarCajas(IEnumerable<CajasModel> cajas)
         {
             Errores = new List<string>();
             List<CajasModel> cajasAgregadas = new List<CajasModel>();
+
             foreach (var caja in cajas)
             {
                 if (string.IsNullOrWhiteSpace(caja.codigo_barras))
@@ -73,38 +79,43 @@ namespace AplicacionPollos.Repositories
                     Errores.Add($"La caja con temp_id {caja.temp_id} tiene un número de lote inválido.");
                     continue;
                 }
-                if (caja.rango_peso <= 0)
+                if (caja.rango_peso < 0)
                 {
                     Errores.Add($"La caja con temp_id {caja.temp_id} tiene un rango de peso inválido.");
                     continue;
                 }
-                context.Insert(caja);
+
+                // Asignar ID e insertar en la lista
+                caja.id = _siguienteId++;
+                _cajas.Add(caja);
                 cajasAgregadas.Add(caja);
             }
         }
 
-        //Read
+        // --- Read ---
+
         public IEnumerable<CajasModel> GetAll()
         {
-            return context.Table<CajasModel>().OrderBy(c => c.id);
+            return _cajas.OrderBy(c => c.id);
         }
 
         public CajasModel GetById(int id)
         {
-            return context.Table<CajasModel>().FirstOrDefault(c => c.id == id);
+            return _cajas.FirstOrDefault(c => c.id == id);
         }
 
         public IEnumerable<CajasModel> GetByLote(int numeroLote)
         {
-            return context.Table<CajasModel>().Where(c => c.numero_lote == numeroLote).OrderBy(c => c.id);
+            return _cajas.Where(c => c.numero_lote == numeroLote).OrderBy(c => c.id);
         }
 
         public IEnumerable<CajasModel> GetByRangoPeso(byte rangoPeso)
         {
-            return context.Table<CajasModel>().Where(c => c.rango_peso == rangoPeso).OrderBy(c => c.id);
+            return _cajas.Where(c => c.rango_peso == rangoPeso).OrderBy(c => c.id);
         }
 
-        //Update
+        // --- Update ---
+
         public bool ActualizarCaja(CajasModel caja)
         {
             Errores = new List<string>();
@@ -121,7 +132,7 @@ namespace AplicacionPollos.Repositories
             {
                 Errores.Add("El número de lote es obligatorio.");
             }
-            if (caja.rango_peso <= 0)
+            if (caja.rango_peso < 0)
             {
                 Errores.Add("El rango de peso es obligatorio.");
             }
@@ -138,16 +149,18 @@ namespace AplicacionPollos.Repositories
                 return false;
             }
 
+            // Al actualizar las propiedades de 'c', automáticamente se refleja en la lista
+            // porque 'c' es una referencia al objeto almacenado en _cajas.
             c.codigo_barras = caja.codigo_barras;
             c.numero_lote = caja.numero_lote;
             c.rango_peso = caja.rango_peso;
             c.peso = caja.peso;
 
-            context.Update(c);
             return true;
         }
 
-        //Delete
+        // --- Delete ---
+
         public bool EliminarCaja(int id)
         {
             Errores = new List<string>();
@@ -159,14 +172,16 @@ namespace AplicacionPollos.Repositories
                 return false;
             }
 
-            context.Delete(caja);
+            _cajas.Remove(caja);
             return true;
         }
-        //borrar todas las cajas
+
         public void EliminarTodasLasCajas()
         {
-            context.DeleteAll<CajasModel>();
+            _cajas.Clear();
+            _siguienteId = 1; // Opcional: Reiniciar el contador de IDs si vacías la lista
         }
+
         public async Task ImprimirExcel()
         {
             await excel.CrearYAbrirExcel(GetAll().ToList());
