@@ -19,7 +19,6 @@ namespace AplicacionPollos.ViewModels
         Pilgrim,
         Ninguno
     }
-
     public enum Vistas
     {
         Agregar,
@@ -69,7 +68,7 @@ namespace AplicacionPollos.ViewModels
         public List<string> Patrones { get; set; } = new() //regex
         {
             @"^27(\d{4})(\d{4})\d{2}(\d{5})\d{7}A$", //no se de que empresa es, pero es el primer patrón
-            @"0{4}\d{27}"   //Pilgrim
+            @"^0{4}(\d{5})\d{2}(\d{5})\d{15}"        //Pilgrim
 
         };
 
@@ -408,8 +407,8 @@ namespace AplicacionPollos.ViewModels
 
                     case Estandar.Pilgrim:
                         //TODO: Identificar donde viene el número de piezas, o si es un producto estandarizado y no tiene variación en la cantidad de piezas.
-                        if (!TryParseSubstring(codigo_barras, 0, 9, out var gtin_pilgrim) ||
-                            !TryParseSubstring(codigo_barras, 23, 10, out var lote_pilgrim_str) ||
+                        if (!TryParseSubstring(codigo_barras, 3, 5, out var gtin_pilgrim) ||
+                            !TryParseSubstring(codigo_barras, 24, 7, out var lote_pilgrim_str) ||
                             !TryParseSubstring(codigo_barras, 11, 5, out var peso_pilgrim_str))
                         {
                             ListaErrores.Add("ERROR BCR_05: Formato de código inválido para estándar Pilgrim.");
@@ -466,10 +465,6 @@ namespace AplicacionPollos.ViewModels
         {
             //TODO: Agregar los demás estándares
             if (string.IsNullOrWhiteSpace(codigo_barras)) return Estandar.Ninguno;
-            //foreach (var patron in Patrones)
-            //{
-            //    if (!Regex.IsMatch(codigo_barras, patron)) return Estandar.Ninguno;
-            //}
 
             for (int i = 0; i <= Patrones.Count; i++)
             {
