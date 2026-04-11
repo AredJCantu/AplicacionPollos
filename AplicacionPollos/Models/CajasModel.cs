@@ -5,7 +5,6 @@ namespace AplicacionPollos.Models
     public partial class CajasModel
     {
         public int id { get; set; }
-        public int temp_id { get; set; } //Para identificarlos en la lista
         public int numero_lote { get; set; }
         public string GTIN { get; set; } = string.Empty; //Global Trader ID Number
         public byte rango_peso { get; set; } //No lo creo necesario
