@@ -1,5 +1,6 @@
 ﻿using AplicacionPollos.Models;
 using AplicacionPollos.Repositories;
+using AplicacionPollos.Services;
 using CommunityToolkit.Mvvm.Input;
 using Plugin.Maui.Audio;
 using System;
@@ -92,7 +93,6 @@ namespace AplicacionPollos.ViewModels
             CerrarMenuCommand = new RelayCommand(CerrarMenu);
             VerAgregarManualCommand = new RelayCommand(VerAgregarManual);
             VolverCommand=new RelayCommand(Volver);
-            contexto.EliminarTodasLasCajas();
         }
 
         private void Volver()
@@ -292,30 +292,9 @@ namespace AplicacionPollos.ViewModels
             }
         }
 
-        // --- Desuso ---
-        //public void EliminarDesdeBD(int id)
-        //{
-        //    bool resultado = contexto.EliminarCaja(id);
-        //    if (resultado)
-        //    {
-        //        var cajaAEliminar = ListaCajas.FirstOrDefault(c => c.id == id);
-        //        if (cajaAEliminar != null)
-        //        {
-        //            ListaCajas.Remove(cajaAEliminar);
-        //            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListaCajas)));
-        //            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(contadorCajas)));
-        //        }
-        //    }
-        //    else
-        //    {
-        //        ListaErrores.AddRange(contexto.Errores);
-        //        ActualizarMensajeUI();
-        //    }
-        //}
-
         public async void ImprimirReporte()
         {
-            await contexto.ImprimirExcel();
+            await contexto.ImprimirExcel(DateTime.Now.Date);
         }
 
         public void Ok()
@@ -456,9 +435,16 @@ namespace AplicacionPollos.ViewModels
 
             return true;
         }
-        private void AgregarAnomalia()
+        private async void AgregarAnomalia()
         {
             //Usar la api para enviar los datos a la base de datos de Mysql
+            foreach(var caja in ListaCajas) await contexto.AgregarAnomalia(caja);
+
+            MensajeAlerta = "Datos enviados correctamente";
+            VistaMensaje = true;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MensajeAlerta)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(VistaMensaje)));
+
         }
         private void HabilitarEntrys()
         {

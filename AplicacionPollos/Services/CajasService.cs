@@ -18,14 +18,20 @@ namespace AplicacionPollos.Services
             };
         }
 
-        public async Task<List<CajasModel>> GetAllAsync() 
+        public async Task<List<CajasModel>> GetCajasByDateAsync(DateTime fecha) 
         {
-            return await _httpClient.GetFromJsonAsync<List<CajasModel>>("productos") ?? new();
+            return await _httpClient.GetFromJsonAsync<List<CajasModel>>($"cajas/{fecha}") ?? new();
         }
 
         public async Task<bool> SaveCajasAsync(CajasModel caja) 
         {
             var respuesta = _httpClient.PostAsJsonAsync("productos", caja);
+            return respuesta.IsCompletedSuccessfully;
+        }
+
+        public async Task<bool> SaveAnomaliaAsync(CajasModel caja)
+        {
+            var respuesta = _httpClient.PostAsJsonAsync("anomalia", caja);
             return respuesta.IsCompletedSuccessfully;
         }
     }
