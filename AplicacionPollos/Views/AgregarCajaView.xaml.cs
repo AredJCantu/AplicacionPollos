@@ -9,9 +9,6 @@ using ZXing;
 
 namespace AplicacionPollos.Views;
 
-// TO DO: generar vista de menu para escoger entre editar o eliminar un elemento seleccionado del CollectionView
-// TO DO: Acomodar la ventana de mensaje
-// TO DO: Generar vista de eliminar
 
 public partial class AgregarCajaView : ContentPage
 {
@@ -134,12 +131,14 @@ public partial class AgregarCajaView : ContentPage
 
     private void RegistroManualbtn_Clicked(object sender, EventArgs e)
     {
-        txtCodigo_2.Text=string.Empty;
-        Dispatcher.Dispatch(() => txtCodigo_2.Focus());
+        txtCodigo_2.Text = contexto.CajaAnomalia.codigo_barras??string.Empty;
+        
+        Dispatcher.Dispatch(() => txtLote_2.Focus());
     }
 
     private void GuardarManual_Clicked(object sender, EventArgs e)
     {
         PrepararParaSiguienteEscaneo();
     }
+
 }

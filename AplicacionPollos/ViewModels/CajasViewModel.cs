@@ -52,13 +52,14 @@ namespace AplicacionPollos.ViewModels
         public bool VistaMensaje { get; set; } = false;
         public string MensajeAlerta { get; set; } = string.Empty;
         public string contadorCajas => "Cajas: " + ListaCajas.Count;
+        public string ultimo_codigo { get; set; } = "";
 
         // --- Colecciones y Modelos ---
         public List<string> ListaErrores { get; set; } = new();
         public ObservableCollection<CajasModel> ListaCajas { get; set; } = new();
         public ObservableCollection<CajasModel> ListaCajasCompleta { get; set; } = new();
         public CajasModel? CajaModel { get; set; } = new();
-        public CajasModel? CajaAnomalia { get; set; }
+        public CajasModel? CajaAnomalia { get; set; } = new();
         public List<string> Patrones { get; set; } = new() //regex
         {
             @"^27(\d{4})(\d{4})\d{2}(\d{5})\d{7}A$", //no se de que empresa es, pero es el primer patrón
@@ -105,11 +106,11 @@ namespace AplicacionPollos.ViewModels
 
         private void VerAgregarManual()
         {
-            EsAnomalia= true;
-            fondoHabilitado = false;
             Ok();
+            EsAnomalia = true;
+            fondoHabilitado = false;
             CajaAnomalia = new();
-            CajaAnomalia.codigo_barras = CajaModel.codigo_barras;
+            CajaAnomalia.codigo_barras = ultimo_codigo;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
         }
 
@@ -171,6 +172,7 @@ namespace AplicacionPollos.ViewModels
             int temp_id = ListaCajas.LastOrDefault() == null ? 1 : ListaCajas.LastOrDefault().temp_id + 1;
             cajaParaLista.temp_id = temp_id;
             cajaParaLista.codigo_barras = codigo_barras;
+            ultimo_codigo = codigo_barras; // Guardar el codigo de barras, en caso que sea anomalia
             if (EsAnomalia) {
                 cajaParaLista.GTIN=CajaAnomalia.GTIN;
                 cajaParaLista.numero_lote=CajaAnomalia.numero_lote;
@@ -272,7 +274,7 @@ namespace AplicacionPollos.ViewModels
                 return;
             }
 
-            contexto.AgregarCajas(ListaCajas);
+            contexto.AgregarCaja(ListaCajas);
 
             if (ListaErrores.Count > 0)
             {
@@ -355,7 +357,7 @@ namespace AplicacionPollos.ViewModels
                         // Validar longitud mínima y extraer subcadenas de forma segura
                         if (!TryParseSubstring(codigo_barras, 2, 4, out var gtin) ||
                             !TryParseSubstring(codigo_barras, 6, 4, out var lote_str) ||
-                            !TryParseSubstring(codigo_barras, 11, 2, out var piezas_str) ||
+                            !TryParseSubstring(codigo_barras, 10, 2, out var piezas_str) ||
                             !TryParseSubstring(codigo_barras, 12, 4, out var peso_str))
                         {
                             ListaErrores.Add("ERROR BCR_02: Formato de código inválido.");
@@ -393,7 +395,7 @@ namespace AplicacionPollos.ViewModels
                         //TODO: Identificar donde viene el número de piezas, o si es un producto estandarizado y no tiene variación en la cantidad de piezas.
                         if (!TryParseSubstring(codigo_barras, 3, 5, out var gtin_pilgrim) ||
                             !TryParseSubstring(codigo_barras, 24, 7, out var lote_pilgrim_str) ||
-                            !TryParseSubstring(codigo_barras, 11, 5, out var peso_pilgrim_str))
+                            !TryParseSubstring(codigo_barras, 11, 4, out var peso_pilgrim_str))
                         {
                             ListaErrores.Add("ERROR BCR_05: Formato de código inválido para estándar Pilgrim.");
                             ActualizarMensajeUI();
@@ -438,7 +440,7 @@ namespace AplicacionPollos.ViewModels
         private async void AgregarAnomalia()
         {
             //Usar la api para enviar los datos a la base de datos de Mysql
-            foreach(var caja in ListaCajas) await contexto.AgregarAnomalia(caja);
+            foreach(var caja in ListaCajas) await contexto.AgregarAnomalia((IEnumerable<CajasModel>)caja);
 
             MensajeAlerta = "Datos enviados correctamente";
             VistaMensaje = true;

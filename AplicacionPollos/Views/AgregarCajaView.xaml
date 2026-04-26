@@ -11,74 +11,100 @@
 
     <ContentPage.Resources>
         <Style TargetType="Entry">
-            <Setter Property="FontSize" Value="22"></Setter>
-            <Setter Property="TextColor" Value="Black"></Setter>
-            <Setter Property="PlaceholderColor" Value="#DDDCDC"></Setter>
-            <Setter Property="HeightRequest" Value="45"></Setter>
-            <Setter Property="VerticalTextAlignment" Value="Center"></Setter>
+            <Setter Property="FontSize" Value="22" />
+            <Setter Property="TextColor" Value="Black" />
+            <Setter Property="PlaceholderColor" Value="#DDDCDC" />
+            <Setter Property="HeightRequest" Value="45" />
+            <Setter Property="VerticalTextAlignment" Value="Center" />
         </Style>
+
         <Style TargetType="Label">
-            <Setter Property="FontSize" Value="23"></Setter>
+            <Setter Property="FontSize" Value="23" />
+        </Style>
+
+        <Style x:Key="FondoOscuroModal" TargetType="BoxView">
+            <Setter Property="BackgroundColor" Value="#80000000" />
+            <Setter Property="Grid.Row" Value="0" />
+            <Setter Property="Grid.RowSpan" Value="3" />
+        </Style>
+
+        <Style x:Key="BotonBaseStyle" TargetType="Button">
+            <Setter Property="CornerRadius" Value="15" />
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="HeightRequest" Value="50" />
+            <Setter Property="TextColor" Value="White" />
+            <Setter Property="VisualStateManager.VisualStateGroups">
+                <VisualStateGroupList>
+                    <VisualStateGroup x:Name="EstadosComunes">
+                        <VisualState x:Name="Normal" />
+                        <VisualState x:Name="Pressed">
+                            <VisualState.Setters>
+                                <Setter Property="Scale" Value="0.95" />
+                                <Setter Property="Opacity" Value="0.8" />
+                            </VisualState.Setters>
+                        </VisualState>
+                    </VisualStateGroup>
+                </VisualStateGroupList>
+            </Setter>
+        </Style>
+
+        <Style x:Key="BotonNaranja" TargetType="Button" BasedOn="{StaticResource BotonBaseStyle}">
+            <Setter Property="BackgroundColor" Value="OrangeRed" />
+        </Style>
+
+        <Style x:Key="BotonVerde" TargetType="Button" BasedOn="{StaticResource BotonBaseStyle}">
+            <Setter Property="BackgroundColor" Value="#2CB32C" />
         </Style>
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="auto,*,auto" >
-        <VerticalStackLayout Grid.Row="0" Grid.RowSpan="4" IsEnabled="{Binding fondoHabilitado}">
-            
+    <Grid RowDefinitions="auto, *, auto">
+
+        <VerticalStackLayout Grid.Row="0" Grid.RowSpan="3" IsEnabled="{Binding fondoHabilitado}">
+
             <Border Margin="10,10,10,0" Stroke="Black" StrokeThickness="2">
                 <Border.StrokeShape>
-                    <RoundRectangle  CornerRadius="10"/>
+                    <RoundRectangle CornerRadius="10"/>
                 </Border.StrokeShape>
                 <Grid>
-                    <VerticalStackLayout Grid.Row="1" BackgroundColor="White" Padding="15,10">
+                    <VerticalStackLayout Grid.Row="0" BackgroundColor="White" Padding="15,10">
                         <Label Text="Código de barras:" TextColor="Black" />
                         <Entry x:Name="txtCodigo" 
-       Completed="txtCodigo_Completed"
-       Text="{Binding CajaModel.codigo_barras}" 
-       Keyboard="Text" 
-       TextColor="Black" 
-       PlaceholderColor="Gray" />
+                               Completed="txtCodigo_Completed"
+                               Text="{Binding CajaModel.codigo_barras}" 
+                               Keyboard="Text" 
+                               PlaceholderColor="Gray" />
 
-                        <Grid IsVisible="{Binding EditarEntrys}" ColumnDefinitions="auto,*">
-                            <Label  Grid.Column="0" Text="Rango de peso:" VerticalTextAlignment="Center" TextColor="Black" />
-                            <Entry FontAttributes="Bold" Margin="5,8,0,0" Grid.Column="1" ClearButtonVisibility="WhileEditing" x:Name="txtRango" Placeholder="0" Keyboard="Numeric" Text="{Binding CajaModel.rango_peso}" TextColor="Black" PlaceholderColor="Gray" />
+                        <Grid IsVisible="{Binding EditarEntrys}" ColumnDefinitions="auto, *">
+                            <Label Grid.Column="0" Text="Rango de peso:" VerticalTextAlignment="Center" TextColor="Black" />
+                            <Entry x:Name="txtRango" Grid.Column="1" Margin="5,8,0,0" FontAttributes="Bold" ClearButtonVisibility="WhileEditing" Placeholder="0" Keyboard="Numeric" Text="{Binding CajaModel.rango_peso}" PlaceholderColor="Gray" />
                         </Grid>
 
-                        <Grid IsVisible="{Binding EditarEntrys}" ColumnDefinitions="auto,*" >
-                            <Label VerticalTextAlignment="Center" Grid.Column="0" Text="Peso de la caja:" TextColor="Black" />
-                            <Entry FontAttributes="Bold" Margin="5,8,0,0" Grid.Column="1" ClearButtonVisibility="WhileEditing" x:Name="txtPeso" Placeholder="00.00" Keyboard="Numeric" Text="{Binding CajaModel.peso}" TextColor="Black" PlaceholderColor="Gray" />
+                        <Grid IsVisible="{Binding EditarEntrys}" ColumnDefinitions="auto, *">
+                            <Label Grid.Column="0" Text="Peso de la caja:" VerticalTextAlignment="Center" TextColor="Black" />
+                            <Entry x:Name="txtPeso" Grid.Column="1" Margin="5,8,0,0" FontAttributes="Bold" ClearButtonVisibility="WhileEditing" Placeholder="00.00" Keyboard="Numeric" Text="{Binding CajaModel.peso}" PlaceholderColor="Gray" />
                         </Grid>
 
-                        <Button CornerRadius="15" FontSize="16" Padding="5"  x:Name="BtnAceptar" Clicked="BtnAceptar_Clicked" Margin="0,10,0,0" Command="{Binding GuardarCommand}" CommandParameter="{Binding Source={x:Reference txtCodigo},Path=Text}" HeightRequest="50" BackgroundColor="OrangeRed" TextColor="White" Text="Agregar" >
+                        <Button x:Name="BtnAceptar" Style="{StaticResource BotonNaranja}" 
+                                Text="Agregar" Margin="0,10,0,0" Padding="5"
+                                Clicked="BtnAceptar_Clicked" 
+                                Command="{Binding GuardarCommand}" 
+                                CommandParameter="{Binding Source={x:Reference txtCodigo}, Path=Text}">
                             <Button.Triggers>
                                 <DataTrigger TargetType="Button" Binding="{Binding EditarEntrys}" Value="True">
                                     <Setter Property="Text" Value="Guardar Cambios" />
                                     <Setter Property="BackgroundColor" Value="#2CB32C" />
                                 </DataTrigger>
                             </Button.Triggers>
-                            <VisualStateManager.VisualStateGroups>
-                                <VisualStateGroupList>
-                                    <VisualStateGroup x:Name="EstadosComunes">
-                                        <VisualState x:Name="Normal" />
-                                        <VisualState x:Name="Pressed">
-                                            <VisualState.Setters>
-                                                <Setter Property="BackgroundColor" Value="#FF6F39" />
-                                                <Setter Property="Scale" Value="0.95" />
-                                            </VisualState.Setters>
-                                        </VisualState>
-                                    </VisualStateGroup>
-                                </VisualStateGroupList>
-                            </VisualStateManager.VisualStateGroups>
                         </Button>
                     </VerticalStackLayout>
                 </Grid>
             </Border>
 
-            <Label Margin="0,10,0,0" FontAttributes="Bold" TextColor="Black" HorizontalOptions="Center" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" Text="{Binding contadorCajas}"></Label>
+            <Label Margin="0,10,0,0" FontAttributes="Bold" TextColor="Black" HorizontalOptions="Center" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" Text="{Binding contadorCajas}" />
 
             <Border Stroke="Black" StrokeThickness="2" Padding="5" Margin="10">
                 <Border.StrokeShape>
-                    <RoundRectangle  CornerRadius="10"/>
+                    <RoundRectangle CornerRadius="10"/>
                 </Border.StrokeShape>
                 <CollectionView x:Name="CLWLista" SelectionMode="Single" ItemsSource="{Binding ListaCajas}">
                     <CollectionView.Resources>
@@ -89,50 +115,35 @@
                         </Style>
                     </CollectionView.Resources>
                     <CollectionView.Header>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Label Grid.Column="0" Text="ID" FontAttributes="Bold"></Label>
-                            <Label Grid.Column="1" Text="Lote" FontAttributes="Bold"></Label>
-                            <Label Grid.Column="2" Text="Rango" FontAttributes="Bold"></Label>
-                            <Label Grid.Column="3" Text="Peso" FontAttributes="Bold"></Label>
+                        <Grid ColumnDefinitions="*, *, *, *">
+                            <Label Grid.Column="0" Text="ID" FontAttributes="Bold" />
+                            <Label Grid.Column="1" Text="Lote" FontAttributes="Bold" />
+                            <Label Grid.Column="2" Text="Rango" FontAttributes="Bold" />
+                            <Label Grid.Column="3" Text="Peso" FontAttributes="Bold" />
                         </Grid>
                     </CollectionView.Header>
                     <CollectionView.ItemTemplate>
                         <DataTemplate>
-                            <Grid>
+                            <Grid ColumnDefinitions="*, *, *, *">
                                 <Grid.Behaviors>
-                                    <Toolkit:TouchBehavior LongPressCommand="{Binding BindingContext.VerMenuCommand,Source={x:Reference CLWLista}}" />
+                                    <Toolkit:TouchBehavior LongPressCommand="{Binding BindingContext.VerMenuCommand, Source={x:Reference CLWLista}}" />
                                 </Grid.Behaviors>
                                 <VisualStateManager.VisualStateGroups>
                                     <VisualStateGroupList>
                                         <VisualStateGroup x:Name="CommonStates">
-
                                             <VisualState x:Name="Normal">
                                                 <VisualState.Setters>
                                                     <Setter Property="BackgroundColor" Value="Transparent" />
                                                 </VisualState.Setters>
                                             </VisualState>
-
                                             <VisualState x:Name="Selected">
                                                 <VisualState.Setters>
                                                     <Setter Property="BackgroundColor" Value="#FF8E64" />
                                                 </VisualState.Setters>
                                             </VisualState>
-
                                         </VisualStateGroup>
                                     </VisualStateGroupList>
                                 </VisualStateManager.VisualStateGroups>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
                                 <Label Grid.Column="0" Text="{Binding temp_id}"/>
                                 <Label Grid.Column="1" Text="{Binding numero_lote}"/>
                                 <Label Grid.Column="2" Text="{Binding rango_peso}"/>
@@ -143,155 +154,82 @@
                 </CollectionView>
             </Border>
 
-            <Button CornerRadius="15" FontSize="16" Margin="10" x:Name="Enviar_Datos" Clicked="Enviar_Datos_Clicked" Text="Enviar datos" HeightRequest="50" BackgroundColor="OrangeRed" TextColor="White">
-                <VisualStateManager.VisualStateGroups>
-                    <VisualStateGroupList>
-                        <VisualStateGroup x:Name="EstadosComunes">
-                            <VisualState x:Name="Normal" />
-                            <VisualState x:Name="Pressed">
-                                <VisualState.Setters>
-                                    <Setter Property="BackgroundColor" Value="#FF6F39" />
-                                    <Setter Property="Scale" Value="0.95" />
-                                </VisualState.Setters>
-                            </VisualState>
-                        </VisualStateGroup>
-                    </VisualStateGroupList>
-                </VisualStateManager.VisualStateGroups>
-            </Button>
-            <Button CornerRadius="15" FontSize="16" Margin="10" x:Name="Imprimir" Command="{Binding ImprimirReporteCommand}" Text="Imprimir" HeightRequest="50" BackgroundColor="OrangeRed" TextColor="White">
-                <VisualStateManager.VisualStateGroups>
-                    <VisualStateGroupList>
-                        <VisualStateGroup x:Name="EstadosComunes">
-                            <VisualState x:Name="Normal" />
-                            <VisualState x:Name="Pressed">
-                                <VisualState.Setters>
-                                    <Setter Property="BackgroundColor" Value="#FF6F39" />
-                                    <Setter Property="Scale" Value="0.95" />
-                                </VisualState.Setters>
-                            </VisualState>
-                        </VisualStateGroup>
-                    </VisualStateGroupList>
-                </VisualStateManager.VisualStateGroups>
-            </Button>
+            <Button x:Name="Enviar_Datos" Style="{StaticResource BotonNaranja}" Text="Enviar datos" Margin="10" Clicked="Enviar_Datos_Clicked" />
+            <Button x:Name="Imprimir" Style="{StaticResource BotonNaranja}" Text="Imprimir" Margin="10" Command="{Binding ImprimirReporteCommand}" />
         </VerticalStackLayout>
-        <!--Elemento que pone gris la pantalla para que cierre el menu-->
-        <BoxView Grid.Row="0" Grid.RowSpan="3" 
-                 BackgroundColor="#80000000" 
-                 IsVisible="{Binding Menu}">
+
+
+        <BoxView Style="{StaticResource FondoOscuroModal}" IsVisible="{Binding Menu}">
             <BoxView.GestureRecognizers>
                 <TapGestureRecognizer Command="{Binding CerrarMenuCommand}" />
+                <TapGestureRecognizer Tapped="Button_Clicked" />
             </BoxView.GestureRecognizers>
         </BoxView>
-        <Border IsVisible="{Binding Menu}" Grid.Row="2" Margin="10,0" BackgroundColor="#FFFFFF" x:Name="Menu" Stroke="Black" StrokeThickness="3">
+        <Border x:Name="Menu" Grid.Row="2" Margin="10,0" BackgroundColor="#FFFFFF" Stroke="Black" StrokeThickness="3" IsVisible="{Binding Menu}">
             <Border.StrokeShape>
-                <RoundRectangle CornerRadius="15,15,0,0"></RoundRectangle>
+                <RoundRectangle CornerRadius="15,15,0,0" />
             </Border.StrokeShape>
             <Grid RowDefinitions="*,*" Padding="4">
-                <Grid.Resources>
-                    <Style TargetType="Button">
-                        <Setter Property="Margin" Value="8"></Setter>
-                    </Style>
-                </Grid.Resources>
-                <Button Command="{Binding VerEditarCommand}" CommandParameter="{Binding Source={x:Reference CLWLista},Path=SelectedItem}" BackgroundColor="#6BE400" ContentLayout="left,10" FontSize="18" TextTransform="Uppercase" Grid.Row="0" Text="Editar"></Button>
-                <Button BackgroundColor="#C63600" FontSize="18" TextTransform="Uppercase" Grid.Row="1" Command="{Binding VerEliminarCommand}" Text="Eliminar"></Button>
+                <Button Grid.Row="0" Margin="8" BackgroundColor="#6BE400" ContentLayout="left,10" FontSize="18" TextTransform="Uppercase" Text="Editar" Command="{Binding VerEditarCommand}" CommandParameter="{Binding Source={x:Reference CLWLista}, Path=SelectedItem}" />
+                <Button Grid.Row="1" Margin="8" BackgroundColor="#C63600" FontSize="18" TextTransform="Uppercase" Text="Eliminar" Command="{Binding VerEliminarCommand}" />
             </Grid>
         </Border>
-        <!--borde para para el fondo-->
-        <BoxView Grid.Row="0" Grid.RowSpan="3" 
-            BackgroundColor="#80000000" 
-            IsVisible="{Binding VistaMensaje}">
-        </BoxView>
-        <Border Grid.Row="1" HeightRequest="140" Margin="10,0" BackgroundColor="LightGray" x:Name="MensajeWindow" IsVisible="{Binding VistaMensaje}" Stroke="Black" StrokeThickness="4">
-            <Grid RowDefinitions="*,auto" Margin="5,0,5,10">
-                <Label Grid.Row="0" x:Name="lblMensaje" Text="{Binding MensajeAlerta}" FontSize="20" HorizontalTextAlignment="Center" VerticalTextAlignment="Center"></Label>
-                <HorizontalStackLayout Grid.Row="1"  HorizontalOptions="Center">
-                    <Button Text="Registro manual" x:Name="RegistroManualbtn" Clicked="RegistroManualbtn_Clicked" Margin="0,0,10,0" BackgroundColor="OrangeRed" FontSize="20" Command="{Binding VerAgregarManualCommand}"></Button>
-                    <Button Text="Aceptar"  BackgroundColor="LightGreen" FontSize="20" Clicked="Button_Clicked" Command="{Binding OkCommand}"></Button>
-                </HorizontalStackLayout>
-            </Grid>
-        </Border>
-        <!-- Elemento para cerrar menu de eliminar -->
-        <BoxView Grid.Row="0" Grid.RowSpan="3" 
-         BackgroundColor="#80000000" 
-         IsVisible="{Binding VerEliminar}">
-        </BoxView>
-        <Border Grid.Row="1" IsVisible="{Binding VerEliminar}" HeightRequest="140" Margin="10,0" BackgroundColor="LightGray"  Stroke="Black" StrokeThickness="4">
-            <Grid RowDefinitions="*,auto" Margin="5,0,5,10">
-                <Label Grid.Row="0" Text="Esta seguro de eliminar este registro?" FontSize="20" HorizontalTextAlignment="Center" VerticalTextAlignment="Center"></Label>
+
+        <BoxView Style="{StaticResource FondoOscuroModal}" IsVisible="{Binding VistaMensaje}" />
+        <Border x:Name="MensajeWindow" Grid.Row="1" HeightRequest="140" Margin="10,0" BackgroundColor="LightGray" Stroke="Black" StrokeThickness="4" IsVisible="{Binding VistaMensaje}">
+            <Grid RowDefinitions="*, auto" Margin="5,0,5,10">
+                <Label Grid.Row="0" Margin="5" x:Name="lblMensaje" Text="{Binding MensajeAlerta}" FontSize="15" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
                 <HorizontalStackLayout Grid.Row="1" HorizontalOptions="Center">
-                    <Button Margin="0,0,20,0" x:Name="ConfirmarEliminarButton" Text="Eliminar" Command="{Binding EliminarCommand}" CommandParameter="{Binding Source={x:Reference CLWLista},Path=SelectedItem}" BackgroundColor="#9B2A00" FontSize="20"></Button>
-                    <Button Text="Cancelar" BackgroundColor="#2CB32C" FontSize="20" Command="{Binding OkCommand}"></Button>
+                    <Button x:Name="RegistroManualbtn" Text="Registro manual" Style="{StaticResource BotonNaranja}" Margin="0,0,10,0" FontSize="20" Clicked="RegistroManualbtn_Clicked" Command="{Binding VerAgregarManualCommand}" />
+                    <Button Text="Aceptar" BackgroundColor="LightGreen" TextColor="White" CornerRadius="15" FontSize="20" Padding="10,0" HeightRequest="50" Clicked="Button_Clicked" Command="{Binding OkCommand}" />
                 </HorizontalStackLayout>
             </Grid>
         </Border>
-        <!--Codigo anomalo-->
-        <BoxView Grid.Row="0" Grid.RowSpan="3" 
-    BackgroundColor="#80000000" 
-    IsVisible="{Binding EsAnomalia}">
-        </BoxView>
 
-        <Border IsVisible="{Binding EsAnomalia}" Grid.Row="0" HeightRequest="450" Margin="10,10,10,0" Stroke="DarkSlateGrey" StrokeThickness="4">
-            <Border.StrokeShape>
-                <RoundRectangle  CornerRadius="10"/>
-            </Border.StrokeShape>
-            <Grid>
-                <VerticalStackLayout Grid.Row="1" BackgroundColor="White" Padding="20">
-                    <Label Text="Código de barras:" TextColor="Black" />
-                    <Entry x:Name="txtCodigo_2" 
-                    Text="{Binding CajaAnomalia.codigo_barras}" 
-                    Keyboard="Text" 
-                    TextColor="Black" 
-                    PlaceholderColor="Gray" />
-                    <Grid ColumnDefinitions="auto,*">
-                        <Label  Grid.Column="0" Text="Lote:" VerticalTextAlignment="Center" TextColor="Black" />
-                        <Entry FontAttributes="Bold" Margin="5,8,0,0" Grid.Column="1" ClearButtonVisibility="WhileEditing"  Placeholder="0" Keyboard="Numeric" Text="{Binding CajaAnomalia.numero_lote}" TextColor="Black" PlaceholderColor="Gray" />
-                    </Grid>
-                    <Grid ColumnDefinitions="auto,*">
-                        <Label  Grid.Column="0" Text="Numero de piezas:" VerticalTextAlignment="Center" TextColor="Black" />
-                        <Entry FontAttributes="Bold" Margin="5,8,0,0" Grid.Column="1" ClearButtonVisibility="WhileEditing"  Placeholder="0" Keyboard="Numeric" Text="{Binding CajaAnomalia.numero_lote}" TextColor="Black" PlaceholderColor="Gray" />
-                    </Grid>
-                    <Grid ColumnDefinitions="auto,*">
-                        <Label  Grid.Column="0" Text="Rango de peso:" VerticalTextAlignment="Center" TextColor="Black" />
-                        <Entry FontAttributes="Bold" Margin="5,8,0,0" Grid.Column="1" ClearButtonVisibility="WhileEditing"  Placeholder="0" Keyboard="Numeric" Text="{Binding CajaAnomalia.rango_peso}" TextColor="Black" PlaceholderColor="Gray" />
-                    </Grid>
-
-                    <Grid ColumnDefinitions="auto,*" >
-                        <Label VerticalTextAlignment="Center" Grid.Column="0" Text="Peso de la caja:" TextColor="Black" />
-                        <Entry FontAttributes="Bold" Margin="5,8,0,0" Grid.Column="1" ClearButtonVisibility="WhileEditing"  Placeholder="00.00" Keyboard="Numeric" Text="{Binding CajaAnomalia.peso}" TextColor="Black" PlaceholderColor="Gray" />
-                    </Grid>
-
-                    <Button CornerRadius="15" FontSize="16" Padding="5" x:Name="GuardarManual" Clicked="GuardarManual_Clicked" Margin="0,10,0,0" Command="{Binding GuardarCommand}" CommandParameter="{Binding Source={x:Reference txtCodigo_2},Path=Text}" HeightRequest="50" BackgroundColor="OrangeRed" TextColor="White" Text="Agregar manualmente" >
-                        <VisualStateManager.VisualStateGroups>
-                            <VisualStateGroupList>
-                                <VisualStateGroup x:Name="EstadosComunes">
-                                    <VisualState x:Name="Normal" />
-                                    <VisualState x:Name="Pressed">
-                                        <VisualState.Setters>
-                                            <Setter Property="BackgroundColor" Value="#FF6F39" />
-                                            <Setter Property="Scale" Value="0.95" />
-                                        </VisualState.Setters>
-                                    </VisualState>
-                                </VisualStateGroup>
-                            </VisualStateGroupList>
-                        </VisualStateManager.VisualStateGroups>
-                    </Button>
-                    <Button CornerRadius="15" FontSize="16" Padding="5"  Margin="0,10,0,0" Command="{Binding VolverCommand}" HeightRequest="50" BackgroundColor="#408E2F" TextColor="White" Text="Regresar" >
-                        <VisualStateManager.VisualStateGroups>
-                            <VisualStateGroupList>
-                                <VisualStateGroup x:Name="EstadosComunes">
-                                    <VisualState x:Name="Normal" />
-                                    <VisualState x:Name="Pressed">
-                                        <VisualState.Setters>
-                                            <Setter Property="BackgroundColor" Value="#68B159" />
-                                            <Setter Property="Scale" Value="0.95" />
-                                        </VisualState.Setters>
-                                    </VisualState>
-                                </VisualStateGroup>
-                            </VisualStateGroupList>
-                        </VisualStateManager.VisualStateGroups>
-                    </Button>
-                </VerticalStackLayout>
+        <BoxView Style="{StaticResource FondoOscuroModal}" IsVisible="{Binding VerEliminar}" />
+        <Border Grid.Row="1" HeightRequest="140" Margin="10,0" BackgroundColor="LightGray" Stroke="Black" StrokeThickness="4" IsVisible="{Binding VerEliminar}">
+            <Grid RowDefinitions="*, auto" Margin="5,0,5,10">
+                <Label Grid.Row="0" Text="¿Está seguro de eliminar este registro?" FontSize="20" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
+                <HorizontalStackLayout Grid.Row="1" HorizontalOptions="Center">
+                    <Button x:Name="ConfirmarEliminarButton" Text="Eliminar" BackgroundColor="#9B2A00" TextColor="White" CornerRadius="15" HeightRequest="50" Clicked="Button_Clicked" FontSize="20" Margin="0,0,20,0" Command="{Binding EliminarCommand}" CommandParameter="{Binding Source={x:Reference CLWLista}, Path=SelectedItem}" />
+                    <Button Text="Cancelar" Clicked="Button_Clicked" Style="{StaticResource BotonVerde}" FontSize="20" Command="{Binding OkCommand}" />
+                </HorizontalStackLayout>
             </Grid>
         </Border>
+
+        <BoxView Style="{StaticResource FondoOscuroModal}" IsVisible="{Binding EsAnomalia}" />
+        <Border Grid.Row="0" Grid.RowSpan="3" HeightRequest="450" Margin="10,10,10,0" Stroke="Black" StrokeThickness="4" IsVisible="{Binding EsAnomalia}">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="10"/>
+            </Border.StrokeShape>
+            <VerticalStackLayout BackgroundColor="White" Padding="20">
+                <Label Text="Código de barras:" TextColor="Black" />
+                <Entry x:Name="txtCodigo_2" Text="{Binding CajaAnomalia.codigo_barras}" Keyboard="Text" PlaceholderColor="Gray" />
+
+                <Grid ColumnDefinitions="auto, *">
+                    <Label Grid.Column="0" Text="Lote:" VerticalTextAlignment="Center" TextColor="Black" />
+                    <Entry x:Name="txtLote_2" Grid.Column="1" Margin="5,8,0,0" FontAttributes="Bold" ClearButtonVisibility="WhileEditing" Placeholder="0" Keyboard="Numeric" Text="{Binding CajaAnomalia.numero_lote}" PlaceholderColor="Gray" />
+                </Grid>
+
+                <Grid ColumnDefinitions="auto, *">
+                    <Label Grid.Column="0" Text="Número de piezas:" VerticalTextAlignment="Center" TextColor="Black" />
+                    <Entry Grid.Column="1" Margin="5,8,0,0" FontAttributes="Bold" ClearButtonVisibility="WhileEditing" Placeholder="0" Keyboard="Numeric" Text="{Binding CajaAnomalia.numero_lote}" PlaceholderColor="Gray" />
+                </Grid>
+
+                <Grid ColumnDefinitions="auto, *">
+                    <Label Grid.Column="0" Text="Rango de peso:" VerticalTextAlignment="Center" TextColor="Black" />
+                    <Entry Grid.Column="1" Margin="5,8,0,0" FontAttributes="Bold" ClearButtonVisibility="WhileEditing" Placeholder="0" Keyboard="Numeric" Text="{Binding CajaAnomalia.rango_peso}" PlaceholderColor="Gray" />
+                </Grid>
+
+                <Grid ColumnDefinitions="auto, *">
+                    <Label Grid.Column="0" Text="Peso de la caja:" VerticalTextAlignment="Center" TextColor="Black" />
+                    <Entry Grid.Column="1" Margin="5,8,0,0" FontAttributes="Bold" ClearButtonVisibility="WhileEditing" Placeholder="00.00" Keyboard="Numeric" Text="{Binding CajaAnomalia.peso}" PlaceholderColor="Gray" />
+                </Grid>
+
+                <Button x:Name="GuardarManual" Style="{StaticResource BotonNaranja}" Margin="0,10,0,0" Padding="5" Text="Agregar manualmente" Clicked="GuardarManual_Clicked" Command="{Binding GuardarCommand}" CommandParameter="{Binding Source={x:Reference txtCodigo_2}, Path=Text}" />
+                <Button Style="{StaticResource BotonVerde}" Margin="0,10,0,0" Padding="5" Text="Regresar" Clicked="GuardarManual_Clicked" Command="{Binding VolverCommand}" />
+            </VerticalStackLayout>
+        </Border>
+
     </Grid>
 </ContentPage>
