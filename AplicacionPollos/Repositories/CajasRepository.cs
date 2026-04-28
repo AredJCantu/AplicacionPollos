@@ -1,4 +1,5 @@
 ﻿using AplicacionPollos.Models;
+using SQLite;
 using AplicacionPollos.Services;
 using System;
 using System.Collections.Generic;
@@ -9,12 +10,22 @@ namespace AplicacionPollos.Repositories
 {
     public class GestionadorCajas
     {
+        SQLiteConnection context;
         ImprimirExcel excel = new();
-        private readonly CajasService _cajasService = new();
+        //private readonly CajasService _cajasService = new();
+
         public List<string> Errores = new();
 
+        public GestionadorCajas()
+        {
+            var connection = FileSystem.AppDataDirectory + "/Cajas.db3";
+            context = new SQLiteConnection(connection);
+            context.CreateTable<CajasModel>();
+            context.CreateTable<AnomaliaCaja>();
+        }
+
         //-- Create --
-        public async Task<bool> AgregarCaja(IEnumerable<CajasModel> cajas)
+        public bool AgregarCaja(IEnumerable<CajasModel> cajas)
         {
             Errores = new List<string>();
 
@@ -40,14 +51,13 @@ namespace AplicacionPollos.Repositories
                     Errores.Add($"La caja con temp_id {caja.temp_id} tiene un rango de peso inválido.");
                     continue;
                 }
-
-                await _cajasService.SaveCajasAsync(caja);
+                context.Insert(caja);
             }
 
             return true;
         }
 
-        public async Task<bool> AgregarAnomalia(IEnumerable<CajasModel> cajas)
+        public bool AgregarAnomalia(IEnumerable<AnomaliaCaja> cajas)
         {
             Errores = new List<string>();
 
@@ -74,22 +84,23 @@ namespace AplicacionPollos.Repositories
                     continue;
                 }
 
-                await _cajasService.SaveAnomaliaAsync(caja);
+                context.Insert(cajas);
             }
 
             return true;
         }
 
         // --- Read ---
-        public async Task<List<CajasModel>> GetReporte(DateTime date)
+        public List<CajasModel> GetReporte(DateTime date)
         {
-            var cajas = await _cajasService.GetCajasByDateAsync(date);
-            return cajas;
+            DateTime fecha = date.Date;
+            DateTime fechaMañana = fecha.AddDays(1);
+            return context.Table<CajasModel>().Where(x => x.inserted_at >= fecha && x.inserted_at <= fechaMañana).ToList();
         }
 
         public async Task ImprimirExcel(DateTime date)
         {
-            await excel.CrearYAbrirExcel(await GetReporte(date));
+            await excel.CrearYAbrirExcel(GetReporte(date));
         }
     }
 }
