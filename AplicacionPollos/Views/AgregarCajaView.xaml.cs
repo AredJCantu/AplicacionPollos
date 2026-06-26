@@ -122,6 +122,7 @@ public partial class AgregarCajaView : ContentPage
     private void Enviar_Datos_Clicked(object sender, EventArgs e)
     {
         contexto.EnviarDatos();
+        PrepararParaSiguienteEscaneo();
     }
     //aceptar clicket
     private void Button_Clicked(object sender, EventArgs e)
@@ -133,7 +134,7 @@ public partial class AgregarCajaView : ContentPage
     {
         txtCodigo_2.Text = contexto.CajaAnomalia.codigo_barras??string.Empty;
         
-        Dispatcher.Dispatch(() => txtLote_2.Focus());
+        Dispatcher.Dispatch(() => txtNumeroPiezas_2.Focus());
     }
 
     private void GuardarManual_Clicked(object sender, EventArgs e)

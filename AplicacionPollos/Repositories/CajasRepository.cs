@@ -51,6 +51,11 @@ namespace AplicacionPollos.Repositories
                     Errores.Add($"La caja con temp_id {caja.temp_id} tiene un rango de peso inválido.");
                     continue;
                 }
+                // ✅ Asignar la fecha de inserción si no está asignada
+                if (caja.inserted_at == default(DateTime))
+                {
+                    caja.inserted_at = DateTime.Now;
+                }
                 context.Insert(caja);
             }
 
@@ -83,8 +88,12 @@ namespace AplicacionPollos.Repositories
                     Errores.Add($"La caja con temp_id {caja.temp_id} tiene un rango de peso inválido.");
                     continue;
                 }
-
-                context.Insert(cajas);
+                // ✅ Asignar la fecha de inserción si no está asignada
+                if (caja.inserted_at == default(DateTime))
+                {
+                    caja.inserted_at = DateTime.Now;
+                }
+                context.Insert(caja);
             }
 
             return true;
@@ -93,9 +102,22 @@ namespace AplicacionPollos.Repositories
         // --- Read ---
         public List<CajasModel> GetReporte(DateTime date)
         {
-            DateTime fecha = date.Date;
-            DateTime fechaMañana = fecha.AddDays(1);
-            return context.Table<CajasModel>().Where(x => x.inserted_at >= fecha && x.inserted_at <= fechaMañana).ToList();
+            try
+            {
+                DateTime fecha = date.Date;                          // Inicio del día: 2026-04-06 00:00:00
+                DateTime fechaMañana = fecha.AddDays(1);             // Inicio del siguiente día: 2026-04-07 00:00:00
+
+                // ✅ Ejecutar en memoria después de traer de DB (SQLite-net tiene limitaciones)
+                var cajas = context.Table<CajasModel>().ToList();    // Traer todas las cajas
+                var resultado = cajas.Where(x => x.inserted_at.Date == fecha.Date).ToList();  // Filtrar por fecha
+
+                return resultado;
+            }
+            catch (Exception ex)
+            {
+                Errores.Add($"Error al obtener reporte: {ex.Message}");
+                return new List<CajasModel>();
+            }
         }
 
         public async Task ImprimirExcel(DateTime date)

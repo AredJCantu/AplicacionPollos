@@ -59,55 +59,61 @@
 
     <Grid RowDefinitions="auto, *, auto">
 
-        <VerticalStackLayout Grid.Row="0" Grid.RowSpan="3" IsEnabled="{Binding fondoHabilitado}">
+       
+        <Grid Grid.Row="0" Grid.RowSpan="3" RowDefinitions="Auto, *, Auto" IsEnabled="{Binding fondoHabilitado}">
 
-            <Border Margin="10,10,10,0" Stroke="Black" StrokeThickness="2">
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="10"/>
-                </Border.StrokeShape>
-                <Grid>
-                    <VerticalStackLayout Grid.Row="0" BackgroundColor="White" Padding="15,10">
-                        <Label Text="Código de barras:" TextColor="Black" />
-                        <Entry x:Name="txtCodigo" 
-                               Completed="txtCodigo_Completed"
-                               Text="{Binding CajaModel.codigo_barras}" 
-                               Keyboard="Text" 
-                               PlaceholderColor="Gray" />
+            
+            <VerticalStackLayout Grid.Row="0">
+                <Border Margin="10,10,10,0" Stroke="Black" StrokeThickness="2">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="10"/>
+                    </Border.StrokeShape>
+                    <Grid>
+                        <VerticalStackLayout Grid.Row="0" BackgroundColor="White" Padding="15,10">
+                            <Label Text="Código de barras:" TextColor="Black" />
+                            <Entry x:Name="txtCodigo" 
+                                   Completed="txtCodigo_Completed"
+                                   Text="{Binding CajaModel.codigo_barras}" 
+                                   Keyboard="Text" 
+                                   PlaceholderColor="Gray" />
 
-                        <Grid IsVisible="{Binding EditarEntrys}" ColumnDefinitions="auto, *">
-                            <Label Grid.Column="0" Text="Rango de peso:" VerticalTextAlignment="Center" TextColor="Black" />
-                            <Entry x:Name="txtRango" Grid.Column="1" Margin="5,8,0,0" FontAttributes="Bold" ClearButtonVisibility="WhileEditing" Placeholder="0" Keyboard="Numeric" Text="{Binding CajaModel.rango_peso}" PlaceholderColor="Gray" />
-                        </Grid>
+                            <Grid IsVisible="{Binding EditarEntrys}" ColumnDefinitions="auto, *">
+                                <Label Grid.Column="0" Text="Rango de peso:" VerticalTextAlignment="Center" TextColor="Black" />
+                                <Entry x:Name="txtRango" Grid.Column="1" Margin="5,8,0,0" FontAttributes="Bold" ClearButtonVisibility="WhileEditing" Placeholder="0" Keyboard="Numeric" Text="{Binding CajaModel.rango_peso}" PlaceholderColor="Gray" />
+                            </Grid>
 
-                        <Grid IsVisible="{Binding EditarEntrys}" ColumnDefinitions="auto, *">
-                            <Label Grid.Column="0" Text="Peso de la caja:" VerticalTextAlignment="Center" TextColor="Black" />
-                            <Entry x:Name="txtPeso" Grid.Column="1" Margin="5,8,0,0" FontAttributes="Bold" ClearButtonVisibility="WhileEditing" Placeholder="00.00" Keyboard="Numeric" Text="{Binding CajaModel.peso}" PlaceholderColor="Gray" />
-                        </Grid>
+                            <Grid IsVisible="{Binding EditarEntrys}" ColumnDefinitions="auto, *">
+                                <Label Grid.Column="0" Text="Peso de la caja:" VerticalTextAlignment="Center" TextColor="Black" />
+                                <Entry x:Name="txtPeso" Grid.Column="1" Margin="5,8,0,0" FontAttributes="Bold" ClearButtonVisibility="WhileEditing" Placeholder="00.00" Keyboard="Numeric" Text="{Binding CajaModel.peso}" PlaceholderColor="Gray" />
+                            </Grid>
 
-                        <Button x:Name="BtnAceptar" Style="{StaticResource BotonNaranja}" 
-                                Text="Agregar" Margin="0,10,0,0" Padding="5"
-                                Clicked="BtnAceptar_Clicked" 
-                                Command="{Binding GuardarCommand}" 
-                                CommandParameter="{Binding Source={x:Reference txtCodigo}, Path=Text}">
-                            <Button.Triggers>
-                                <DataTrigger TargetType="Button" Binding="{Binding EditarEntrys}" Value="True">
-                                    <Setter Property="Text" Value="Guardar Cambios" />
-                                    <Setter Property="BackgroundColor" Value="#2CB32C" />
-                                </DataTrigger>
-                            </Button.Triggers>
-                        </Button>
-                    </VerticalStackLayout>
-                </Grid>
-            </Border>
+                            <Button x:Name="BtnAceptar" Style="{StaticResource BotonNaranja}" 
+                                    Text="Agregar" Margin="0,10,0,0" Padding="5"
+                                    Clicked="BtnAceptar_Clicked" 
+                                    Command="{Binding GuardarCommand}" 
+                                    CommandParameter="{Binding Source={x:Reference txtCodigo}, Path=Text}">
+                                <Button.Triggers>
+                                    <DataTrigger TargetType="Button" Binding="{Binding EditarEntrys}" Value="True">
+                                        <Setter Property="Text" Value="Guardar Cambios" />
+                                        <Setter Property="BackgroundColor" Value="#2CB32C" />
+                                    </DataTrigger>
+                                </Button.Triggers>
+                            </Button>
+                        </VerticalStackLayout>
+                    </Grid>
+                </Border>
 
-            <Label Margin="0,10,0,0" FontAttributes="Bold" TextColor="Black" HorizontalOptions="Center" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" Text="{Binding contadorCajas}" />
+                <Label Margin="0,10,0,0" FontAttributes="Bold" TextColor="Black" HorizontalOptions="Center" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" Text="{Binding contadorCajas}" />
+            </VerticalStackLayout>
 
-            <Border Stroke="Black" StrokeThickness="2" Padding="5" Margin="10">
+           
+            <Border Grid.Row="1" Stroke="Black" StrokeThickness="2" Padding="5" Margin="10">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="10"/>
                 </Border.StrokeShape>
                 <CollectionView x:Name="CLWLista" SelectionMode="Single" ItemsSource="{Binding ListaCajas}">
                     <CollectionView.Resources>
+                        
                         <Style TargetType="Label">
                             <Setter Property="HorizontalTextAlignment" Value="Center" />
                             <Setter Property="Margin" Value="2, 0"/>
@@ -128,22 +134,7 @@
                                 <Grid.Behaviors>
                                     <Toolkit:TouchBehavior LongPressCommand="{Binding BindingContext.VerMenuCommand, Source={x:Reference CLWLista}}" />
                                 </Grid.Behaviors>
-                                <VisualStateManager.VisualStateGroups>
-                                    <VisualStateGroupList>
-                                        <VisualStateGroup x:Name="CommonStates">
-                                            <VisualState x:Name="Normal">
-                                                <VisualState.Setters>
-                                                    <Setter Property="BackgroundColor" Value="Transparent" />
-                                                </VisualState.Setters>
-                                            </VisualState>
-                                            <VisualState x:Name="Selected">
-                                                <VisualState.Setters>
-                                                    <Setter Property="BackgroundColor" Value="#FF8E64" />
-                                                </VisualState.Setters>
-                                            </VisualState>
-                                        </VisualStateGroup>
-                                    </VisualStateGroupList>
-                                </VisualStateManager.VisualStateGroups>
+                                
                                 <Label Grid.Column="0" Text="{Binding temp_id}"/>
                                 <Label Grid.Column="1" Text="{Binding numero_lote}"/>
                                 <Label Grid.Column="2" Text="{Binding rango_peso}"/>
@@ -154,9 +145,14 @@
                 </CollectionView>
             </Border>
 
-            <Button x:Name="Enviar_Datos" Style="{StaticResource BotonNaranja}" Text="Enviar datos" Margin="10" Clicked="Enviar_Datos_Clicked" />
-            <Button x:Name="Imprimir" Style="{StaticResource BotonNaranja}" Text="Imprimir" Margin="10" Command="{Binding ImprimirReporteCommand}" />
-        </VerticalStackLayout>
+            
+            <VerticalStackLayout Grid.Row="2">
+                <!-- Corroborar si es necesario -->
+                <!--<Button x:Name="Enviar_Datos" Style="{StaticResource BotonNaranja}" Text="Enviar datos" Margin="10" Clicked="Enviar_Datos_Clicked" />-->
+                <Button x:Name="Imprimir" Style="{StaticResource BotonNaranja}" Text="Imprimir" Margin="10,0,10,10" Command="{Binding ImprimirReporteCommand}" />
+            </VerticalStackLayout>
+
+        </Grid>
 
 
         <BoxView Style="{StaticResource FondoOscuroModal}" IsVisible="{Binding Menu}">
@@ -177,6 +173,9 @@
 
         <BoxView Style="{StaticResource FondoOscuroModal}" IsVisible="{Binding VistaMensaje}" />
         <Border x:Name="MensajeWindow" Grid.Row="1" HeightRequest="140" Margin="10,0" BackgroundColor="LightGray" Stroke="Black" StrokeThickness="4" IsVisible="{Binding VistaMensaje}">
+            <Border.StrokeShape>
+                <RoundRectangleGeometry CornerRadius="10"></RoundRectangleGeometry>
+            </Border.StrokeShape>
             <Grid RowDefinitions="*, auto" Margin="5,0,5,10">
                 <Label Grid.Row="0" Margin="5" x:Name="lblMensaje" Text="{Binding MensajeAlerta}" FontSize="15" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
                 <HorizontalStackLayout Grid.Row="1" HorizontalOptions="Center">
@@ -198,7 +197,7 @@
         </Border>
 
         <BoxView Style="{StaticResource FondoOscuroModal}" IsVisible="{Binding EsAnomalia}" />
-        <Border Grid.Row="0" Grid.RowSpan="3" HeightRequest="450" Margin="10,10,10,0" Stroke="Black" StrokeThickness="4" IsVisible="{Binding EsAnomalia}">
+        <Border Grid.Row="0"  HeightRequest="450" Margin="10,10,10,0" Stroke="Black" StrokeThickness="4" IsVisible="{Binding EsAnomalia}">
             <Border.StrokeShape>
                 <RoundRectangle CornerRadius="10"/>
             </Border.StrokeShape>
@@ -207,13 +206,8 @@
                 <Entry x:Name="txtCodigo_2" Text="{Binding CajaAnomalia.codigo_barras}" Keyboard="Text" PlaceholderColor="Gray" />
 
                 <Grid ColumnDefinitions="auto, *">
-                    <Label Grid.Column="0" Text="Lote:" VerticalTextAlignment="Center" TextColor="Black" />
-                    <Entry x:Name="txtLote_2" Grid.Column="1" Margin="5,8,0,0" FontAttributes="Bold" ClearButtonVisibility="WhileEditing" Placeholder="0" Keyboard="Numeric" Text="{Binding CajaAnomalia.numero_lote}" PlaceholderColor="Gray" />
-                </Grid>
-
-                <Grid ColumnDefinitions="auto, *">
                     <Label Grid.Column="0" Text="Número de piezas:" VerticalTextAlignment="Center" TextColor="Black" />
-                    <Entry Grid.Column="1" Margin="5,8,0,0" FontAttributes="Bold" ClearButtonVisibility="WhileEditing" Placeholder="0" Keyboard="Numeric" Text="{Binding CajaAnomalia.numero_lote}" PlaceholderColor="Gray" />
+                    <Entry Grid.Column="1" x:Name="txtNumeroPiezas_2" Margin="5,8,0,0" FontAttributes="Bold" ClearButtonVisibility="WhileEditing" Placeholder="0" Keyboard="Numeric" Text="{Binding CajaAnomalia.numero_piezas}" PlaceholderColor="Gray" />
                 </Grid>
 
                 <Grid ColumnDefinitions="auto, *">
@@ -222,7 +216,7 @@
                 </Grid>
 
                 <Grid ColumnDefinitions="auto, *">
-                    <Label Grid.Column="0" Text="Peso de la caja:" VerticalTextAlignment="Center" TextColor="Black" />
+                    <Label Grid.Column="0" Text="Peso:" VerticalTextAlignment="Center" TextColor="Black" />
                     <Entry Grid.Column="1" Margin="5,8,0,0" FontAttributes="Bold" ClearButtonVisibility="WhileEditing" Placeholder="00.00" Keyboard="Numeric" Text="{Binding CajaAnomalia.peso}" PlaceholderColor="Gray" />
                 </Grid>
 

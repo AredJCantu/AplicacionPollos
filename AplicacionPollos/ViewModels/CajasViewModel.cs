@@ -282,11 +282,6 @@ namespace AplicacionPollos.ViewModels
             }
             else
             {
-                MensajeAlerta = "Datos enviados correctamente";
-                VistaMensaje = true;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MensajeAlerta)));
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(VistaMensaje)));
-
                 ListaCajas.Clear();
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(contadorCajas)));
                 CajaModel = new();
@@ -296,6 +291,7 @@ namespace AplicacionPollos.ViewModels
 
         public async void ImprimirReporte()
         {
+            EnviarDatos();
             await contexto.ImprimirExcel(DateTime.Now.Date);
         }
 
@@ -437,10 +433,10 @@ namespace AplicacionPollos.ViewModels
 
             return true;
         }
-        private async void AgregarAnomalia()
+        private void AgregarAnomalia()
         {
             //Usar la api para enviar los datos a la base de datos de Mysql
-            foreach(var caja in ListaCajas) await contexto.AgregarAnomalia((IEnumerable<CajasModel>)caja);
+            var b = contexto.AgregarAnomalia((IEnumerable<AnomaliaCaja>)ListaCajas);
 
             MensajeAlerta = "Datos enviados correctamente";
             VistaMensaje = true;
@@ -460,7 +456,7 @@ namespace AplicacionPollos.ViewModels
             //TODO: Agregar los demás estándares
             if (string.IsNullOrWhiteSpace(codigo_barras)) return Estandar.Ninguno;
 
-            for (int i = 0; i <= Patrones.Count; i++)
+            for (int i = 0; i < Patrones.Count; i++)
             {
                 if (Regex.IsMatch(codigo_barras, Patrones[i]))
                 {

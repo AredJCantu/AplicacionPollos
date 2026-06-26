@@ -17,24 +17,28 @@ namespace AplicacionPollos.Services
                 // Crear un nuevo workbook
                 using var workbook = new XLWorkbook();
                 var worksheet = workbook.Worksheets.Add("Inventario de Cajas");
+                // Estilos
+                worksheet.Cell(3, 2).Value = "Nombre de compañia";
+                worksheet.Cell(3, 6).Value = "LOGO";
+               
 
                 // Agregar encabezados
-                worksheet.Cell(1, 1).Value = "ID";
-                worksheet.Cell(1, 2).Value = "Número de Lote";
-                worksheet.Cell(1, 3).Value = "GTIN";
-                worksheet.Cell(1, 4).Value = "Código de Barras";
-                worksheet.Cell(1, 5).Value = "Rango Peso";
-                worksheet.Cell(1, 6).Value = "Peso";
-                worksheet.Cell(1, 7).Value = "Número de Piezas";
+                worksheet.Cell(5, 2).Value = "ID";
+                worksheet.Cell(5, 3).Value = "Número de Lote";
+                worksheet.Cell(5, 4).Value = "GTIN";
+                worksheet.Cell(5, 5).Value = "Código de Barras";
+                worksheet.Cell(5, 6).Value = "Rango Peso";
+                worksheet.Cell(5, 7).Value = "Peso";
+                worksheet.Cell(5, 8).Value = "Número de Piezas";
 
                 // Aplicar formato a los encabezados
-                var headerRange = worksheet.Range("A1:G1");
+                var headerRange = worksheet.Range("B5:H5");
                 headerRange.Style.Font.Bold = true;
                 headerRange.Style.Fill.BackgroundColor = XLColor.LightBlue;
                 headerRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
                 // Agregar datos
-                int row = 2;
+                int row = 6;
                 foreach (var caja in Cajas)
                 {
                     worksheet.Cell(row, 1).Value = caja.temp_id;
